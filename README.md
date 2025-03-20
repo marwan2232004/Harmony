@@ -1,4 +1,4 @@
-# 🎵 Audio Classification with Machine Learning in C++ 🚀
+# 🎵 Audio Classification 🚀
 
 ## 📌 Project Overview
 This project is a machine learning-based audio classification system built in **C++**. It processes audio signals, extracts features, and classifies them into predefined categories using machine learning techniques. The system is optimized for performance and real-time processing, making it suitable for applications like speech recognition, music genre classification, and environmental sound analysis.
