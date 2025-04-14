@@ -1,10 +1,17 @@
 import pandas as pd
 from pathlib import Path
+import sys
+from pathlib import Path
+project_root_path = Path(__file__).resolve().parent.parent.parent.parent  # Adjust as needed
+if str(project_root_path) not in sys.path:
+    sys.path.append(str(project_root_path))
+
+from project_root import get_path
 # CONFIG (Edit these)
-TSV_PATH = "your_data.tsv"  # Path to your TSV
-AUDIO_DIR = "dataset"  # Folder with MP3s
-OUTPUT_CSV = "cleaned_data.csv"  # Output file
-MIN_NET_VOTES = 2  # (up_votes - down_votes) >= 2
+TSV_PATH = get_path('data','uncleaned_data.tsv')  # Path to your TSV
+AUDIO_DIR = r"D:\Github\NN Dataset zips"  # Folder with MP3s
+OUTPUT_CSV = get_path('data','cleaned.tsv')  # Output file
+MIN_NET_VOTES = 2  # (up_votesss - down_votess) >= 2
 
 
 def clean_data():
@@ -12,11 +19,11 @@ def clean_data():
     df = pd.read_csv(
         TSV_PATH,
         sep='\t',
-        usecols=['path', 'gender', 'up_vote', 'down_vote']
+        usecols=['path', 'gender', 'up_votes', 'down_votes']
     )
 
     # 2. Filter by vote quality
-    df = df[(df['up_vote'] - df['down_vote']) >= MIN_NET_VOTES].copy()
+    df = df[(df['up_votes'] - df['down_votes']) >= MIN_NET_VOTES].copy()
 
     # 3. Check file existence (exact filename match in AUDIO_DIR)
     df['exists'] = df['path'].apply(
