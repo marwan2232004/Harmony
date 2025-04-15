@@ -2,28 +2,25 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <cstdlib>
-#include <ctime>
 #include <filesystem>
 #include <algorithm>
 #include <thread>
 #include <mutex>
 #include <atomic>
 #include <sstream>
-#include <iomanip>
 #include <chrono>
-#include <unordered_map>
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
 
 namespace fs = std::filesystem;
 
 // Configuration
 const std::string AUDIO_DIR = "D:/Github/NN Dataset zips";
-const std::string CSV_PATH = "your_dataset.csv";
-const std::string TEMP_CSV_PATH = "temp_processing.csv";
+const std::string CSV_PATH = "D:/Github/Harmony/data/CSV'S/cleaned.csv";
+const std::string TEMP_CSV_PATH = "D:/Github/Harmony/data/CSV'S/temp_processing.csv";
 const int CHUNK_SIZE = 1000;
-const int TIMEOUT_SECONDS = 5;
 
-// Thread-safe counters and data
+// Thread-safe counters
 std::mutex mtx;
 std::atomic<int> processed_count(0);
 std::atomic<int> error_count(0);
@@ -31,55 +28,25 @@ std::atomic<int> error_count(0);
 struct AudioFile {
     std::string path;
     std::string gender;
-    double duration;
-    bool processed;
+    double duration{};
+    bool processed{};
 };
 
 std::vector<AudioFile> audio_files;
 
 double get_audio_length(const std::string& file_path) {
     try {
-        // Build ffprobe command
-        std::string cmd = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"" + 
-                         file_path + "\" 2>&1";
-        
-        // Execute command with timeout
-        auto start = std::chrono::steady_clock::now();
-        
-        FILE* pipe = _popen(cmd.c_str(), "r");
-        if (!pipe) {
-            throw std::runtime_error("Failed to open pipe");
+        TagLib::FileRef file(file_path.c_str());
+
+        if(file.isNull() || !file.audioProperties()) {
+            throw std::runtime_error("Invalid audio file");
         }
-        
-        char buffer[128];
-        std::string result;
-        while (!feof(pipe)) {
-            if (fgets(buffer, 128, pipe) != nullptr) {
-                result += buffer;
-            }
-            
-            // Check timeout
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - start).count();
-            if (elapsed > TIMEOUT_SECONDS) {
-                _pclose(pipe);
-                throw std::runtime_error("Timeout exceeded");
-            }
-        }
-        
-        int status = _pclose(pipe);
-        if (status != 0) {
-            throw std::runtime_error("FFprobe returned non-zero status");
-        }
-        
-        // Clean and parse result
-        result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
-        result.erase(std::remove(result.begin(), result.end(), '\r'), result.end());
-        
-        return std::stod(result);
+
+        return file.audioProperties()->lengthInSeconds();
     } catch (const std::exception& e) {
         std::lock_guard<std::mutex> lock(mtx);
         std::cerr << "Error processing " << file_path << ": " << e.what() << std::endl;
+        error_count++;
         return 0.0;
     }
 }
@@ -87,10 +54,10 @@ double get_audio_length(const std::string& file_path) {
 void process_chunk(int start_idx, int end_idx) {
     for (int i = start_idx; i < end_idx && i < audio_files.size(); i++) {
         if (audio_files[i].processed) continue;
-        
+
         std::string full_path = AUDIO_DIR + "/" + audio_files[i].path;
         double duration = get_audio_length(full_path);
-        
+
         {
             std::lock_guard<std::mutex> lock(mtx);
             audio_files[i].duration = duration;
@@ -181,9 +148,8 @@ int main() {
     try {
         // Load existing progress
         load_progress();
-        
-        int total_files = audio_files.size();
-        int remaining_files = std::count_if(audio_files.begin(), audio_files.end(), 
+
+        int remaining_files = std::count_if(audio_files.begin(), audio_files.end(),
             [](const AudioFile& f) { return !f.processed; });
         
         std::cout << "Resuming processing - " << remaining_files << " files remaining" << std::endl;
@@ -243,8 +209,6 @@ int main() {
         
         std::cout << "Processing complete! Processed " << processed_count << " files with " 
                   << error_count << " errors." << std::endl;
-        
-        // TODO: Add histogram generation (would need a plotting library)
         
     } catch (const std::exception& e) {
         std::cerr << "Fatal error: " << e.what() << std::endl;
