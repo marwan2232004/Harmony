@@ -1,28 +1,8 @@
 #include "mfcc.h"
-#include <essentia/algorithmfactory.h>
+#include "feature.h"
 
 using namespace essentia;
 using namespace standard;
-
-void computeStats(const std::vector<std::vector<Real>>& features,
-                  std::vector<Real>& means,
-                  std::vector<Real>& stddevs) {
-    int numCoeffs = features[0].size();
-    means.assign(numCoeffs, 0.0);
-    stddevs.assign(numCoeffs, 0.0);
-
-    for (const auto& frame : features)
-        for (int i = 0; i < numCoeffs; ++i)
-            means[i] += frame[i];
-
-    for (auto& m : means) m /= features.size();
-
-    for (const auto& frame : features)
-        for (int i = 0; i < numCoeffs; ++i)
-            stddevs[i] += (frame[i] - means[i]) * (frame[i] - means[i]);
-
-    for (auto& s : stddevs) s = sqrt(s / features.size());
-}
 
 std::vector<Real> extractMFCCFeatures(
     const std::string& filename,
@@ -37,27 +17,12 @@ std::vector<Real> extractMFCCFeatures(
     int dctType,
     const std::string& logType
 ) {
-    essentia::init();
+    std::vector<Real> audioBuffer, frame, windowedFrame;
+    Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
+    Algorithm* frameCutter = createFrameCutter(frameSize, hopSize, audioBuffer, frame);
+    Algorithm* windowing = createWindowing(frame, windowedFrame);
+
     AlgorithmFactory& factory = AlgorithmFactory::instance();
-
-    Algorithm* loader = factory.create("MonoLoader", "filename", filename, "sampleRate", sampleRate);
-    std::vector<Real> audioBuffer;
-    loader->output("audio").set(audioBuffer);
-    loader->compute();
-
-    Algorithm* frameCutter = factory.create("FrameCutter",
-        "frameSize", frameSize,
-        "hopSize", hopSize,
-        "startFromZero", true);
-    std::vector<Real> frame;
-    frameCutter->input("signal").set(audioBuffer);
-    frameCutter->output("frame").set(frame);
-
-    Algorithm* windowing = factory.create("Windowing", "type", "hamming", "normalized", false);
-    std::vector<Real> windowedFrame;
-    windowing->input("frame").set(frame);
-    windowing->output("frame").set(windowedFrame);
-
     Algorithm* spectrum = factory.create("Spectrum", "size", frameSize);
     std::vector<Real> spectrumFrame;
     spectrum->input("frame").set(windowedFrame);
@@ -74,7 +39,8 @@ std::vector<Real> extractMFCCFeatures(
         "liftering", liftering,
         "logType", logType);
 
-    std::vector<Real> mfccCoeffs, mfccBands;
+    std::vector<Real> mfccCoeffs;
+    std::vector<Real> mfccBands;
     mfcc->input("spectrum").set(spectrumFrame);
     mfcc->output("mfcc").set(mfccCoeffs);
     mfcc->output("bands").set(mfccBands);
@@ -87,7 +53,6 @@ std::vector<Real> extractMFCCFeatures(
         windowing->compute();
         spectrum->compute();
         mfcc->compute();
-
         allMFCCs.push_back(mfccCoeffs);
     }
 
@@ -103,7 +68,6 @@ std::vector<Real> extractMFCCFeatures(
     delete windowing;
     delete spectrum;
     delete mfcc;
-    essentia::shutdown();
 
     return finalVec;
 }
