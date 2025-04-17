@@ -1,8 +1,9 @@
 #pragma once
 #include <essentia/essentia.h>
+#include <essentia/algorithmfactory.h>
 #include <bits/stdc++.h>
 
-std::vector<essentia::Real> extractChromaFeatures(
+std::vector<float> extractChromaFeatures(
     const std::string& filename,
     int sampleRate,
     int frameSize,
@@ -11,5 +12,8 @@ std::vector<essentia::Real> extractChromaFeatures(
     int binsPerOctave,
     float threshold,
     const std::string& normalizeType,
-    const std::string& windowType
+    const std::string& windowType,
+    essentia::standard::AlgorithmFactory& factory,
+    std::vector<float>& featureVector,
+    bool appendToFeatureVector
 );

@@ -96,6 +96,12 @@
     "xstddef": "cpp",
     "xtr1common": "cpp",
     "xtree": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "any": "cpp",
+    "*.tcc": "cpp",
+    "memory_resource": "cpp",
+    "string_view": "cpp",
+    "variant": "cpp",
+    "numbers": "cpp"
   }
 }

@@ -1,5 +1,5 @@
 #include "chroma.h"
-#include "feature.h"
+#include "feature_utils.h"
 
 using namespace essentia;
 using namespace standard;
@@ -13,14 +13,16 @@ std::vector<Real> extractChromaFeatures(
     int binsPerOctave,
     float threshold,
     const std::string& normalizeType,
-    const std::string& windowType
+    const std::string& windowType,
+    AlgorithmFactory& factory,
+    std::vector<float>& featureVector,
+    bool appendToFeatureVector
 ) {
     std::vector<Real> audioBuffer, frame, windowedFrame;
     Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
     Algorithm* frameCutter = createFrameCutter(frameSize, hopSize, audioBuffer, frame);
     Algorithm* windowing = createWindowing(frame, windowedFrame);
 
-    AlgorithmFactory& factory = AlgorithmFactory::instance();
     Algorithm* chroma = factory.create("Chromagram",
         "sampleRate", sampleRate,
         "minFrequency", minFrequency,
@@ -55,5 +57,8 @@ std::vector<Real> extractChromaFeatures(
     delete windowing;
     delete chroma;
 
+    if (appendToFeatureVector) {
+        featureVector.insert(featureVector.end(), finalVec.begin(), finalVec.end());
+    }
     return finalVec;
 }
