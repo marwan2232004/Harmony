@@ -1,57 +1,22 @@
-cmake_minimum_required(VERSION 3.20)
-project(AudioProcessor LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.16)
+project(AudioML)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(TagLib_DIR "C:/Users/Karim/vcpkg/installed/x64-windows/share/taglib")
-# Common configuration
-set(CMAKE_TOOLCHAIN_FILE "C:/Users/Karim/vcpkg/scripts/buildsystems/vcpkg.cmake")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
-# Global dependencies (shared across all executables)
-find_package(Threads REQUIRED)
-find_package(TagLib REQUIRED)
+find_library(ESSENTIA_LIB essentia)
+find_path(ESSENTIA_INCLUDE essentia/essentia.h)
 
-# Directory structure assumption:
-# core/
-# ├── src_files/
-# │   ├── data/               <- Group related executables
-# │   │   ├── getAudioLength.cpp
-# │   │   ├── getBestThresholdFiles.cpp
-# │   ├── analysis/           <- Another group
-# │   │   ├── audioAnalysis.cpp
+file(GLOB SOURCES "core/*.cpp")
+file(GLOB EXTRACTORS "core/feature_extractors/*.cpp")
 
-#--------------------------------------------------
-# 1. Define each executable as a separate target
-#--------------------------------------------------
+add_executable(main ${SOURCES} ${EXTRACTORS})
 
-# Executable 1: Audio Length Calculator
-add_executable(getAudioLength
-        core/src_files/data/getAudioLength.cpp)
-target_link_libraries(getAudioLength PRIVATE
-        TagLib::TagLib
-        Threads::Threads
-)
-# DLL copy only for this target if needed
-add_custom_command(TARGET getAudioLength POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Users/Karim/vcpkg/installed/x64-windows/bin/tag.dll"
-        $<TARGET_FILE_DIR:getAudioLength>
+target_include_directories(main PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ESSENTIA_INCLUDE}
 )
 
-# Executable 2: Threshold Calculator
-add_executable(getBestThresholdFiles
-        core/src_files/data/getBestThresholdFiles.cpp)
-target_link_libraries(getBestThresholdFiles PRIVATE)
-
-#--------------------------------------------------
-# 2. Optional: Group targets in IDE
-#--------------------------------------------------
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(getAudioLength PROPERTIES FOLDER "core/data")
-set_target_properties(getBestThresholdFiles PROPERTIES FOLDER "core/data")
-
-#--------------------------------------------------
-# 3. Add new executables following the same pattern
-#--------------------------------------------------
-# add_executable(yourNewTool ...)
-# target_link_libraries(yourNewTool ...)
+target_link_libraries(main PRIVATE
+    ${ESSENTIA_LIB}
+)
