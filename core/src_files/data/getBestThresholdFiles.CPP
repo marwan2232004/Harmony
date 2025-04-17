@@ -4,7 +4,6 @@
 #include <vector>
 #include <random>
 #include <algorithm>
-#include <unordered_map>
 const int THRESHHOLD = 10000;
 const int lowest_duration = 3;
 const int highest_duration = 5;
