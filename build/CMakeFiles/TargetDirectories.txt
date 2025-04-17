@@ -1,0 +1,3 @@
+/workspaces/Harmony/build/CMakeFiles/rebuild_cache.dir
+/workspaces/Harmony/build/CMakeFiles/edit_cache.dir
+/workspaces/Harmony/build/CMakeFiles/main.dir

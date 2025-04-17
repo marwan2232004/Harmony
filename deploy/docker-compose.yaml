@@ -1,0 +1,9 @@
+services:
+  audio_classification:
+    build:
+      context: ..
+      dockerfile: ./deploy/dockerfile
+    volumes:
+      - ../audio:/app/audio
+      - ../data/output:/app/data/output
+    working_dir: /app
