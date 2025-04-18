@@ -48,7 +48,6 @@ int main() {
     int predicted_knn = predict_knn(training_features, training_labels, featureVector, 3);
     std::cout << "KNN predicted class: " << predicted_knn << std::endl;
     */
-
     shutdownEssentia();
     return 0;
 }

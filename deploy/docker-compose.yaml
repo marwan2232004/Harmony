@@ -4,6 +4,9 @@ services:
       context: ..
       dockerfile: ./deploy/dockerfile
     volumes:
-      - ../audio:/app/audio
-      - ../data/output:/app/data/output
+      - ../audio:/app/audio                     # Existing mount (keep this)
+      - ../data/output:/app/data/output         # Existing mount (keep this)
+      - D:\Github\NN-Project-Audio-DataSet:/app/dataset  # NEW MOUNT (add this)
     working_dir: /app
+    tty: true          # Keep container alive
+    stdin_open: true   # Allow interactive input
