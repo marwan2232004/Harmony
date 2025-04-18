@@ -9,7 +9,7 @@ find_library(ESSENTIA_LIB essentia)
 find_path(ESSENTIA_INCLUDE essentia/essentia.h)
 
 file(GLOB SOURCES "core/*.cpp")
-file(GLOB EXTRACTORS "core/feature_extractors/*.cpp")
+file(GLOB EXTRACTORS "core/src_files/feature_extractors/*.cpp")
 
 add_executable(main ${SOURCES} ${EXTRACTORS})
 
