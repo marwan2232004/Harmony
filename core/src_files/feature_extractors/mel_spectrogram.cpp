@@ -1,5 +1,5 @@
 #include "mel_spectrogram.h"
-#include "feature.h"
+#include "feature_utils.h"
 
 using namespace essentia;
 using namespace standard;
@@ -15,14 +15,16 @@ std::vector<Real> extractMelSpectrogramFeatures(
     const std::string& warpingFormula,
     const std::string& weighting,
     const std::string& normalize,
-    const std::string& type
+    const std::string& type,
+    AlgorithmFactory& factory,
+    std::vector<float>& featureVector,
+    bool appendToFeatureVector
 ) {
     std::vector<Real> audioBuffer, frame, windowedFrame;
     Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
     Algorithm* frameCutter = createFrameCutter(frameSize, hopSize, audioBuffer, frame);
     Algorithm* windowing = createWindowing(frame, windowedFrame);
 
-    AlgorithmFactory& factory = AlgorithmFactory::instance();
     Algorithm* spectrum = factory.create("Spectrum", "size", frameSize);
     std::vector<Real> spectrumFrame;
     spectrum->input("frame").set(windowedFrame);
@@ -66,5 +68,8 @@ std::vector<Real> extractMelSpectrogramFeatures(
     delete spectrum;
     delete melBands;
 
+    if (appendToFeatureVector) {
+        featureVector.insert(featureVector.end(), finalVec.begin(), finalVec.end());
+    }
     return finalVec;
 }

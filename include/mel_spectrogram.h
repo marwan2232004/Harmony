@@ -1,8 +1,9 @@
 #pragma once
 #include <essentia/essentia.h>
+#include <essentia/algorithmfactory.h>
 #include <bits/stdc++.h>
 
-std::vector<essentia::Real> extractMelSpectrogramFeatures(
+std::vector<float> extractMelSpectrogramFeatures(
     const std::string& filename,
     int sampleRate,
     int frameSize,
@@ -13,5 +14,8 @@ std::vector<essentia::Real> extractMelSpectrogramFeatures(
     const std::string& warpingFormula,
     const std::string& weighting,
     const std::string& normalize,
-    const std::string& type
+    const std::string& type,
+    essentia::standard::AlgorithmFactory& factory,
+    std::vector<float>& featureVector,
+    bool appendToFeatureVector
 );

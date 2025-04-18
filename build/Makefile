@@ -150,32 +150,59 @@ core/feature_extractors/chroma.cpp.s:
 	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.s
 .PHONY : core/feature_extractors/chroma.cpp.s
 
-core/feature_extractors/feature.o: core/feature_extractors/feature.cpp.o
+core/feature_extractors/feature_extractor.o: core/feature_extractors/feature_extractor.cpp.o
 
-.PHONY : core/feature_extractors/feature.o
+.PHONY : core/feature_extractors/feature_extractor.o
 
 # target to build an object file
-core/feature_extractors/feature.cpp.o:
-	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o
-.PHONY : core/feature_extractors/feature.cpp.o
+core/feature_extractors/feature_extractor.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o
+.PHONY : core/feature_extractors/feature_extractor.cpp.o
 
-core/feature_extractors/feature.i: core/feature_extractors/feature.cpp.i
+core/feature_extractors/feature_extractor.i: core/feature_extractors/feature_extractor.cpp.i
 
-.PHONY : core/feature_extractors/feature.i
+.PHONY : core/feature_extractors/feature_extractor.i
 
 # target to preprocess a source file
-core/feature_extractors/feature.cpp.i:
-	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature.cpp.i
-.PHONY : core/feature_extractors/feature.cpp.i
+core/feature_extractors/feature_extractor.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.i
+.PHONY : core/feature_extractors/feature_extractor.cpp.i
 
-core/feature_extractors/feature.s: core/feature_extractors/feature.cpp.s
+core/feature_extractors/feature_extractor.s: core/feature_extractors/feature_extractor.cpp.s
 
-.PHONY : core/feature_extractors/feature.s
+.PHONY : core/feature_extractors/feature_extractor.s
 
 # target to generate assembly for a file
-core/feature_extractors/feature.cpp.s:
-	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature.cpp.s
-.PHONY : core/feature_extractors/feature.cpp.s
+core/feature_extractors/feature_extractor.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.s
+.PHONY : core/feature_extractors/feature_extractor.cpp.s
+
+core/feature_extractors/feature_utils.o: core/feature_extractors/feature_utils.cpp.o
+
+.PHONY : core/feature_extractors/feature_utils.o
+
+# target to build an object file
+core/feature_extractors/feature_utils.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o
+.PHONY : core/feature_extractors/feature_utils.cpp.o
+
+core/feature_extractors/feature_utils.i: core/feature_extractors/feature_utils.cpp.i
+
+.PHONY : core/feature_extractors/feature_utils.i
+
+# target to preprocess a source file
+core/feature_extractors/feature_utils.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.i
+.PHONY : core/feature_extractors/feature_utils.cpp.i
+
+core/feature_extractors/feature_utils.s: core/feature_extractors/feature_utils.cpp.s
+
+.PHONY : core/feature_extractors/feature_utils.s
+
+# target to generate assembly for a file
+core/feature_extractors/feature_utils.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.s
+.PHONY : core/feature_extractors/feature_utils.cpp.s
 
 core/feature_extractors/mel_spectrogram.o: core/feature_extractors/mel_spectrogram.cpp.o
 
@@ -312,6 +339,87 @@ core/main.cpp.s:
 	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/main.cpp.s
 .PHONY : core/main.cpp.s
 
+core/model/knn.o: core/model/knn.cpp.o
+
+.PHONY : core/model/knn.o
+
+# target to build an object file
+core/model/knn.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/knn.cpp.o
+.PHONY : core/model/knn.cpp.o
+
+core/model/knn.i: core/model/knn.cpp.i
+
+.PHONY : core/model/knn.i
+
+# target to preprocess a source file
+core/model/knn.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/knn.cpp.i
+.PHONY : core/model/knn.cpp.i
+
+core/model/knn.s: core/model/knn.cpp.s
+
+.PHONY : core/model/knn.s
+
+# target to generate assembly for a file
+core/model/knn.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/knn.cpp.s
+.PHONY : core/model/knn.cpp.s
+
+core/model/lda.o: core/model/lda.cpp.o
+
+.PHONY : core/model/lda.o
+
+# target to build an object file
+core/model/lda.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/lda.cpp.o
+.PHONY : core/model/lda.cpp.o
+
+core/model/lda.i: core/model/lda.cpp.i
+
+.PHONY : core/model/lda.i
+
+# target to preprocess a source file
+core/model/lda.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/lda.cpp.i
+.PHONY : core/model/lda.cpp.i
+
+core/model/lda.s: core/model/lda.cpp.s
+
+.PHONY : core/model/lda.s
+
+# target to generate assembly for a file
+core/model/lda.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/lda.cpp.s
+.PHONY : core/model/lda.cpp.s
+
+core/model/svm.o: core/model/svm.cpp.o
+
+.PHONY : core/model/svm.o
+
+# target to build an object file
+core/model/svm.cpp.o:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/svm.cpp.o
+.PHONY : core/model/svm.cpp.o
+
+core/model/svm.i: core/model/svm.cpp.i
+
+.PHONY : core/model/svm.i
+
+# target to preprocess a source file
+core/model/svm.cpp.i:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/svm.cpp.i
+.PHONY : core/model/svm.cpp.i
+
+core/model/svm.s: core/model/svm.cpp.s
+
+.PHONY : core/model/svm.s
+
+# target to generate assembly for a file
+core/model/svm.cpp.s:
+	$(MAKE) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/core/model/svm.cpp.s
+.PHONY : core/model/svm.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -324,9 +432,12 @@ help:
 	@echo "... core/feature_extractors/chroma.o"
 	@echo "... core/feature_extractors/chroma.i"
 	@echo "... core/feature_extractors/chroma.s"
-	@echo "... core/feature_extractors/feature.o"
-	@echo "... core/feature_extractors/feature.i"
-	@echo "... core/feature_extractors/feature.s"
+	@echo "... core/feature_extractors/feature_extractor.o"
+	@echo "... core/feature_extractors/feature_extractor.i"
+	@echo "... core/feature_extractors/feature_extractor.s"
+	@echo "... core/feature_extractors/feature_utils.o"
+	@echo "... core/feature_extractors/feature_utils.i"
+	@echo "... core/feature_extractors/feature_utils.s"
 	@echo "... core/feature_extractors/mel_spectrogram.o"
 	@echo "... core/feature_extractors/mel_spectrogram.i"
 	@echo "... core/feature_extractors/mel_spectrogram.s"
@@ -342,6 +453,15 @@ help:
 	@echo "... core/main.o"
 	@echo "... core/main.i"
 	@echo "... core/main.s"
+	@echo "... core/model/knn.o"
+	@echo "... core/model/knn.i"
+	@echo "... core/model/knn.s"
+	@echo "... core/model/lda.o"
+	@echo "... core/model/lda.i"
+	@echo "... core/model/lda.s"
+	@echo "... core/model/svm.o"
+	@echo "... core/model/svm.i"
+	@echo "... core/model/svm.s"
 .PHONY : help
 
 

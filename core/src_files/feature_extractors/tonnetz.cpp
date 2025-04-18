@@ -1,17 +1,19 @@
 #include "tonnetz.h"
-#include "feature.h"
+#include "feature_utils.h"
 
 using namespace essentia;
 using namespace standard;
 
 std::vector<Real> extractTonnetzFeatures(
     const std::string& filename,
-    int sampleRate
+    int sampleRate,
+    AlgorithmFactory& factory,
+    std::vector<float>& featureVector,
+    bool appendToFeatureVector
 ) {
     std::vector<Real> audioBuffer;
     Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
 
-    AlgorithmFactory& factory = AlgorithmFactory::instance();
     Algorithm* tonal = factory.create("TonalExtractor");
     
     std::vector<std::vector<Real>> hpcpFrames;
@@ -61,5 +63,9 @@ std::vector<Real> extractTonnetzFeatures(
     delete loader;
     delete tonal;
 
+    if (appendToFeatureVector) {
+        featureVector.insert(featureVector.end(), features.begin(), features.end());
+    }
     return features;
+
 }

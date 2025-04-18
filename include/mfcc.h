@@ -1,8 +1,9 @@
 #pragma once
 #include <essentia/essentia.h>
+#include <essentia/algorithmfactory.h>
 #include <bits/stdc++.h>
 
-std::vector<essentia::Real> extractMFCCFeatures(
+std::vector<float> extractMFCCFeatures(
     const std::string& filename,
     int sampleRate,
     int frameSize,
@@ -13,5 +14,8 @@ std::vector<essentia::Real> extractMFCCFeatures(
     float highFrequencyBound,
     int liftering,
     int dctType,
-    const std::string& logType
+    const std::string& logType,
+    essentia::standard::AlgorithmFactory& factory,
+    std::vector<float>& featureVector,
+    bool appendToFeatureVector
 );

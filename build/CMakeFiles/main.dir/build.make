@@ -83,22 +83,35 @@ CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/feature_extractors/chroma.cpp -o CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.s
 
-CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o: CMakeFiles/main.dir/flags.make
-CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o: ../core/feature_extractors/feature.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o"
-	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o -c /workspaces/Harmony/core/feature_extractors/feature.cpp
+CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o: ../core/feature_extractors/feature_extractor.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o"
+	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o -c /workspaces/Harmony/core/feature_extractors/feature_extractor.cpp
 
-CMakeFiles/main.dir/core/feature_extractors/feature.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/main.dir/core/feature_extractors/feature.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspaces/Harmony/core/feature_extractors/feature.cpp > CMakeFiles/main.dir/core/feature_extractors/feature.cpp.i
+CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspaces/Harmony/core/feature_extractors/feature_extractor.cpp > CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.i
 
-CMakeFiles/main.dir/core/feature_extractors/feature.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/feature_extractors/feature.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/feature_extractors/feature.cpp -o CMakeFiles/main.dir/core/feature_extractors/feature.cpp.s
+CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/feature_extractors/feature_extractor.cpp -o CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.s
+
+CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o: ../core/feature_extractors/feature_utils.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o"
+	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o -c /workspaces/Harmony/core/feature_extractors/feature_utils.cpp
+
+CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspaces/Harmony/core/feature_extractors/feature_utils.cpp > CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.i
+
+CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/feature_extractors/feature_utils.cpp -o CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.s
 
 CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o: ../core/feature_extractors/mel_spectrogram.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o"
 	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o -c /workspaces/Harmony/core/feature_extractors/mel_spectrogram.cpp
 
 CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.i: cmake_force
@@ -111,7 +124,7 @@ CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.s: cmake_force
 
 CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o: ../core/feature_extractors/mfcc.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o"
 	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o -c /workspaces/Harmony/core/feature_extractors/mfcc.cpp
 
 CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.i: cmake_force
@@ -124,7 +137,7 @@ CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.s: cmake_force
 
 CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o: ../core/feature_extractors/spectral_contrast.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o"
 	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o -c /workspaces/Harmony/core/feature_extractors/spectral_contrast.cpp
 
 CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.i: cmake_force
@@ -137,7 +150,7 @@ CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.s: cmake_force
 
 CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o: CMakeFiles/main.dir/flags.make
 CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o: ../core/feature_extractors/tonnetz.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o"
 	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o -c /workspaces/Harmony/core/feature_extractors/tonnetz.cpp
 
 CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.i: cmake_force
@@ -148,30 +161,81 @@ CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/feature_extractors/tonnetz.cpp -o CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.s
 
+CMakeFiles/main.dir/core/model/knn.cpp.o: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/core/model/knn.cpp.o: ../core/model/knn.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/main.dir/core/model/knn.cpp.o"
+	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/model/knn.cpp.o -c /workspaces/Harmony/core/model/knn.cpp
+
+CMakeFiles/main.dir/core/model/knn.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/main.dir/core/model/knn.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspaces/Harmony/core/model/knn.cpp > CMakeFiles/main.dir/core/model/knn.cpp.i
+
+CMakeFiles/main.dir/core/model/knn.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/model/knn.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/model/knn.cpp -o CMakeFiles/main.dir/core/model/knn.cpp.s
+
+CMakeFiles/main.dir/core/model/lda.cpp.o: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/core/model/lda.cpp.o: ../core/model/lda.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/main.dir/core/model/lda.cpp.o"
+	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/model/lda.cpp.o -c /workspaces/Harmony/core/model/lda.cpp
+
+CMakeFiles/main.dir/core/model/lda.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/main.dir/core/model/lda.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspaces/Harmony/core/model/lda.cpp > CMakeFiles/main.dir/core/model/lda.cpp.i
+
+CMakeFiles/main.dir/core/model/lda.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/model/lda.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/model/lda.cpp -o CMakeFiles/main.dir/core/model/lda.cpp.s
+
+CMakeFiles/main.dir/core/model/svm.cpp.o: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/core/model/svm.cpp.o: ../core/model/svm.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/main.dir/core/model/svm.cpp.o"
+	/usr/bin/g++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/main.dir/core/model/svm.cpp.o -c /workspaces/Harmony/core/model/svm.cpp
+
+CMakeFiles/main.dir/core/model/svm.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/main.dir/core/model/svm.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /workspaces/Harmony/core/model/svm.cpp > CMakeFiles/main.dir/core/model/svm.cpp.i
+
+CMakeFiles/main.dir/core/model/svm.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/main.dir/core/model/svm.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /workspaces/Harmony/core/model/svm.cpp -o CMakeFiles/main.dir/core/model/svm.cpp.s
+
 # Object files for target main
 main_OBJECTS = \
 "CMakeFiles/main.dir/core/main.cpp.o" \
 "CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.o" \
-"CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o" \
+"CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o" \
+"CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o" \
 "CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o" \
 "CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o" \
 "CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o" \
-"CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o"
+"CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o" \
+"CMakeFiles/main.dir/core/model/knn.cpp.o" \
+"CMakeFiles/main.dir/core/model/lda.cpp.o" \
+"CMakeFiles/main.dir/core/model/svm.cpp.o"
 
 # External object files for target main
 main_EXTERNAL_OBJECTS =
 
 main: CMakeFiles/main.dir/core/main.cpp.o
 main: CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.o
-main: CMakeFiles/main.dir/core/feature_extractors/feature.cpp.o
+main: CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o
+main: CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o
 main: CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o
 main: CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o
 main: CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o
 main: CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o
+main: CMakeFiles/main.dir/core/model/knn.cpp.o
+main: CMakeFiles/main.dir/core/model/lda.cpp.o
+main: CMakeFiles/main.dir/core/model/svm.cpp.o
 main: CMakeFiles/main.dir/build.make
 main: /usr/local/lib/libessentia.so
+main: /usr/local/lib/libdlib.a
+main: /usr/lib/x86_64-linux-gnu/libopenblas.so
+main: /usr/lib/x86_64-linux-gnu/libpng.so
+main: /usr/lib/x86_64-linux-gnu/libz.so
 main: CMakeFiles/main.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable main"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/workspaces/Harmony/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX executable main"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/main.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

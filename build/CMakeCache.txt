@@ -220,6 +220,9 @@ ESSENTIA_INCLUDE:PATH=/usr/local/include
 //Path to a library.
 ESSENTIA_LIB:FILEPATH=/usr/local/lib/libessentia.so
 
+//The directory containing a CMake configuration file for dlib.
+dlib_DIR:PATH=/usr/local/lib/cmake/dlib
+
 
 ########################
 # INTERNAL cache entries
