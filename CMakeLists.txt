@@ -19,10 +19,12 @@ add_executable(main ${SOURCES} ${EXTRACTORS} ${MODELS})
 target_include_directories(main PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
+    ${dlib_INCLUDE_DIRS}
 )
 
 target_link_libraries(main PRIVATE
     ${ESSENTIA_LIB}
+    ${dlib_LIBRARIES}
 )
 
 if(EXISTS "C:/Users/Karim/vcpkg/installed/x64-windows/share/taglib")
