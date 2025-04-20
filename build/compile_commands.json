@@ -1,0 +1,57 @@
+[
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/main.cpp.o -c /workspaces/Harmony/core/main.cpp",
+  "file": "/workspaces/Harmony/core/main.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/chroma.cpp.o -c /workspaces/Harmony/core/feature_extractors/chroma.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/chroma.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/feature_extractor.cpp.o -c /workspaces/Harmony/core/feature_extractors/feature_extractor.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/feature_extractor.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/feature_utils.cpp.o -c /workspaces/Harmony/core/feature_extractors/feature_utils.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/feature_utils.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/mel_spectrogram.cpp.o -c /workspaces/Harmony/core/feature_extractors/mel_spectrogram.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/mel_spectrogram.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/mfcc.cpp.o -c /workspaces/Harmony/core/feature_extractors/mfcc.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/mfcc.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/spectral_contrast.cpp.o -c /workspaces/Harmony/core/feature_extractors/spectral_contrast.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/spectral_contrast.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/feature_extractors/tonnetz.cpp.o -c /workspaces/Harmony/core/feature_extractors/tonnetz.cpp",
+  "file": "/workspaces/Harmony/core/feature_extractors/tonnetz.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/model/knn.cpp.o -c /workspaces/Harmony/core/model/knn.cpp",
+  "file": "/workspaces/Harmony/core/model/knn.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/model/lda.cpp.o -c /workspaces/Harmony/core/model/lda.cpp",
+  "file": "/workspaces/Harmony/core/model/lda.cpp"
+},
+{
+  "directory": "/workspaces/Harmony/build",
+  "command": "/usr/bin/g++   -I/workspaces/Harmony/include   -Wall -Wextra -g   -Wreturn-type -std=gnu++2a -o CMakeFiles/main.dir/core/model/svm.cpp.o -c /workspaces/Harmony/core/model/svm.cpp",
+  "file": "/workspaces/Harmony/core/model/svm.cpp"
+}
+]
