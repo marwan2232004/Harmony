@@ -15,12 +15,13 @@ file(GLOB EXTRACTORS "core/feature_extractors/*.cpp")
 file(GLOB MODELS "core/model/*.cpp")
 file(GLOB CLEANER "core/cleaning/*.cpp")
 file(GLOB AUDIO "core/audio/*.cpp")
+file(GLOB PREPROCESSOR "core/preprocessing/*.cpp")
 
 # IMPORTANT: Collect tools but PROPERLY exclude clean_dataset.cpp
 file(GLOB TOOLS_ALL "tools/*.cpp")
 set(TOOLS "")
 foreach(TOOL_FILE ${TOOLS_ALL})
-    if(NOT ${TOOL_FILE} MATCHES "clean_dataset.cpp")
+    if(NOT ${TOOL_FILE} MATCHES "clean_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "process_dataset.cpp")
         list(APPEND TOOLS ${TOOL_FILE})
     endif()
 endforeach()
@@ -30,6 +31,7 @@ file(GLOB HEADERS_INCLUDE "include/*.hpp")
 file(GLOB HEADERS_AUDIO "core/audio/*.hpp")
 file(GLOB HEADERS_CLEANING "core/cleaning/*.hpp")
 file(GLOB HEADERS_TOOLS "tools/*.hpp")
+file(GLOB HEADERS_PREPROCESSOR "core/preprocessing/*.hpp")
 
 # Main executable - WITHOUT clean_dataset.cpp
 add_executable(main 
@@ -61,7 +63,7 @@ target_link_libraries(main PRIVATE
 add_executable(clean_dataset 
     tools/clean_dataset.cpp
     ${CLEANER}
-    ${TOOLS_ALL}
+    ${TOOLS}
     ${AUDIO} 
     ${HEADERS_AUDIO}
     ${HEADERS_CLEANING}
@@ -77,6 +79,30 @@ target_include_directories(clean_dataset PRIVATE
 
 # Link libraries for clean_dataset
 target_link_libraries(clean_dataset PRIVATE
+    ${ESSENTIA_LIB}
+    ${dlib_LIBRARIES}
+    stdc++fs  # Add filesystem library
+)
+
+
+# Add clean_dataset as a separate executable
+add_executable(process_dataset 
+    tools/process_dataset.cpp
+    ${PREPROCESSOR}
+    ${TOOLS}
+    ${HEADERS_PREPROCESSOR} 
+    ${HEADERS_TOOLS}
+)
+
+# Include directories for clean_dataset
+target_include_directories(process_dataset PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ESSENTIA_INCLUDE}
+    ${dlib_INCLUDE_DIRS}
+)
+
+# Link libraries for clean_dataset
+target_link_libraries(process_dataset PRIVATE
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
     stdc++fs  # Add filesystem library
