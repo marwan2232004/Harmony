@@ -14,7 +14,7 @@ int main() {
     std::vector<int> training_labels;
 
     // Should be done for all audio files
-    training_features.push_back(getFeatureVector("audio/input.wav"));
+    training_features.push_back(getFeatureVector("data/datasets/common_voice_en_100166.mp3"));
     training_labels.push_back(1); // currently 0 and 1 for male and female
 
     train_svm_rbf("models/svm_model.dat", training_features, training_labels, 10.0f, 0.1f);

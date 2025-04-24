@@ -19,7 +19,8 @@
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     "source=${localWorkspaceFolder}/audio,target=/app/audio,type=bind",  
-    "source=${localWorkspaceFolder}/data/output,target=/app/data/output,type=bind" 
+    "source=${localWorkspaceFolder}/data/output,target=/app/data/output,type=bind",
+    "source=${localWorkspaceFolder}/data/datasets,target=/app/data/datasets,type=bind" 
   ],
   "postCreateCommand": "echo 'Dev container setup complete!'"
 }

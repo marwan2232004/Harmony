@@ -6,4 +6,5 @@ services:
     volumes:
       - ../audio:/app/audio
       - ../data/output:/app/data/output
+      - ../data/datasets:/app/data/datasets
     working_dir: /app
