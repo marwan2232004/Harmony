@@ -29,8 +29,7 @@ private:
 public:
     DatasetCleaner(
         const std::string& datasetPath, 
-        const std::string& metadataFilePath,
-        int samplesPerCategory = 100
+        const std::string& metadataFilePath
     );
 
     void cleanMetadata();

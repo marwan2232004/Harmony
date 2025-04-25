@@ -12,10 +12,8 @@ namespace fs = std::filesystem;
 
 DatasetCleaner::DatasetCleaner(
     const std::string &datasetPath,
-    const std::string &metadataFilePath,
-    int samplesPerCategory) : datasetPath(datasetPath),
-                              metadataFilePath(metadataFilePath),
-                              samplesPerCategory(samplesPerCategory) {}
+    const std::string &metadataFilePath) : datasetPath(datasetPath),
+                              metadataFilePath(metadataFilePath) {}
 
 void DatasetCleaner::cleanMetadata()
 {
@@ -235,14 +233,18 @@ void DatasetCleaner::exportCleanedDataset(const std::string &outputMetadataPath)
     outFile << "filename\tage\tgender\tduration\n";
 
     // Find the minimum number of samples across all categories for balance
-    int minSamples = samplesPerCategory;
     for (const auto &[category, metadataList] : categorizedMetadata)
     {
-        minSamples = std::min(minSamples, static_cast<int>(metadataList.size()));
         std::cout << "Category " << category << " has " << metadataList.size() << " samples" << std::endl;
     }
 
-    std::cout << "Using " << minSamples << " samples per category for balance" << std::endl;
+    int samplesPerCategory = 0;
+
+    std::cout<<"\nEnter the number of samples per category: ";
+
+    std::cin >> samplesPerCategory;
+
+    std::cout << "Using " << samplesPerCategory << " samples per category for balance" << std::endl;
 
     Tqdm tqdm(categorizedMetadata.size(), "Exporting cleaned dataset");
 
@@ -257,7 +259,7 @@ void DatasetCleaner::exportCleanedDataset(const std::string &outputMetadataPath)
         std::shuffle(selectedMetadata.begin(), selectedMetadata.end(), g);
 
         // Take only the required number of samples
-        int numSamples = std::min(static_cast<int>(selectedMetadata.size()), minSamples);
+        int numSamples = std::min(static_cast<int>(selectedMetadata.size()), samplesPerCategory);
 
         // Copy files and write metadata
         for (int i = 0; i < numSamples; ++i)
