@@ -2,6 +2,15 @@
 #include <string>
 #include <vector>
 #include <essentia/essentia.h>
+#include "../../tools/tqdm.cpp"  
+#include "../../tools/audio_util.hpp"
+#include <essentia/algorithmfactory.h>
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <algorithm>
+#include <random>
 
 class AudioPreprocessor {
 public:
@@ -9,13 +18,14 @@ public:
     ~AudioPreprocessor();
     
     // Process a single file
-    bool processFile(const std::string& inputPath, const std::string& outputPath);
+    bool processFile(const std::string& inputPath, const std::string& outputPath, float& duration);
     
     // Process a batch of files
     std::vector<std::string> processBatch(
-        const std::vector<std::string>& inputPaths,
+        const std::string& metadataPath,
         const std::string& outputDir,
-        bool showProgress = true);
+        const int maxFiles,
+        bool showProgress);
     
     // Configuration setters
     void enableTrimming(bool enable = true) { trimEnabled = enable; }
@@ -51,6 +61,5 @@ private:
     
     // Utility methods
     float calculateRMS(const std::vector<essentia::Real>& buffer);
-    std::vector<essentia::Real> readAudioFile(const std::string& filePath, int& sampleRate);
     bool writeAudioFile(const std::vector<essentia::Real>& buffer, int sampleRate, const std::string& filePath);
 };

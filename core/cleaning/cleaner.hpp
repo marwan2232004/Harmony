@@ -18,8 +18,6 @@ private:
     // Configuration
     std::vector<std::string> genders = {"male", "female"};
     std::vector<std::string> ageGroups = {"twenties", "fifties"};
-    float targetDuration = 5.0f; // default 5 seconds
-    float durationTolerance = 0.5f; // ±0.5 seconds
     int samplesPerCategory = 100; // default 100 samples per category
     
     // Helper methods
@@ -32,8 +30,6 @@ public:
     DatasetCleaner(
         const std::string& datasetPath, 
         const std::string& metadataFilePath,
-        float targetDuration = 5.0f,
-        float durationTolerance = 0.5f,
         int samplesPerCategory = 100
     );
 
@@ -43,8 +39,6 @@ public:
     void exportCleanedDataset(const std::string& outputMetadataPath) const;
     
     // Setters for configuration
-    void setTargetDuration(float duration);
-    void setDurationTolerance(float tolerance);
     void setSamplesPerCategory(int samples);
     void setGenders(const std::vector<std::string>& genders);
     void setAgeGroups(const std::vector<std::string>& ageGroups);

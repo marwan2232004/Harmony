@@ -13,12 +13,8 @@ namespace fs = std::filesystem;
 DatasetCleaner::DatasetCleaner(
     const std::string &datasetPath,
     const std::string &metadataFilePath,
-    float targetDuration,
-    float durationTolerance,
     int samplesPerCategory) : datasetPath(datasetPath),
                               metadataFilePath(metadataFilePath),
-                              targetDuration(targetDuration),
-                              durationTolerance(durationTolerance),
                               samplesPerCategory(samplesPerCategory) {}
 
 void DatasetCleaner::cleanMetadata()
@@ -76,9 +72,10 @@ void DatasetCleaner::cleanMetadata()
         std::string fullPath = datasetPath + "/" + filename;
 
         float duration = -1.0f;
+        int sampleRate = 0;
         if (fs::exists(fullPath))
         {
-            duration = AudioUtil::getAudioDuration(fullPath);
+           AudioUtil::readAudioFile(fullPath, duration, sampleRate);
         }
 
         if (duration > 0)
@@ -183,12 +180,6 @@ void DatasetCleaner::categorizeMetadata()
 
     for (const auto &metadata : allMetadata)
     {
-        // Skip if duration is not within range
-        if (!isWithinDurationRange(metadata.getDuration()))
-        {
-            continue;
-        }
-
         // Categorize by gender and age group
         for (const auto &gender : genders)
         {
@@ -217,11 +208,6 @@ std::string DatasetCleaner::getCategoryKey(const std::string &gender, const std:
     return gender + "_" + ageGroup;
 }
 
-bool DatasetCleaner::isWithinDurationRange(float duration) const
-{
-    return duration >= (targetDuration - durationTolerance) &&
-           duration <= (targetDuration + durationTolerance);
-}
 
 void DatasetCleaner::clean(bool cleanMetadata)
 {
@@ -290,15 +276,6 @@ void DatasetCleaner::exportCleanedDataset(const std::string &outputMetadataPath)
     tqdm.finish();
 }
 
-void DatasetCleaner::setTargetDuration(float duration)
-{
-    targetDuration = duration;
-}
-
-void DatasetCleaner::setDurationTolerance(float tolerance)
-{
-    durationTolerance = tolerance;
-}
 
 void DatasetCleaner::setSamplesPerCategory(int samples)
 {
