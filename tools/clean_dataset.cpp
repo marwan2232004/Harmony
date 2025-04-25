@@ -7,7 +7,6 @@ void printUsage(const char* programName) {
     std::cout << "Options:" << std::endl;
     std::cout << "  --dataset-path=<path>         Path to the dataset directory" << std::endl;
     std::cout << "  --metadata-file=<file>       Path to the metadata file" << std::endl;
-    std::cout << "  --samples-per-category=<num>  Number of samples per category" << std::endl;
     std::cout << "  --clean-tsv            Clean TSV file" << std::endl;
     std::cout << "  --help                        Display this help message" << std::endl;
 }
@@ -27,7 +26,6 @@ int main(int argc, char* argv[]) {
     // Default parameters
     std::string datasetPath = "data/processed";
     std::string metadataFile = "data/processed/processed_metadata.tsv";
-    int samplesPerCategory = 500;
     bool cleanTSV = false;
 
     // Process command line arguments
@@ -47,8 +45,6 @@ int main(int argc, char* argv[]) {
                 datasetPath = value;
             } else if (!(value = getParamValue(arg, "metadata-file")).empty()) {
                 metadataFile = value;
-            } else if (!(value = getParamValue(arg, "samples-per-category")).empty()) {
-                samplesPerCategory = std::stoi(value);
             }
         }
     }
@@ -60,7 +56,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Metadata file: " << metadataFile << std::endl;
         
         // Create and configure dataset cleaner
-        DatasetCleaner cleaner(datasetPath, metadataFile, samplesPerCategory);
+        DatasetCleaner cleaner(datasetPath, metadataFile);
         
         // Set specific age groups and genders we want
         cleaner.setAgeGroups({"twenties", "fifties"});
