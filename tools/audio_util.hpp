@@ -5,5 +5,5 @@
 
 class AudioUtil {
 public:
-    static float getAudioDuration(const std::string& audioFilePath);
+    static std::vector<essentia::Real> readAudioFile(const std::string& audioFilePath, float& duration, int& sampleRate);
 };

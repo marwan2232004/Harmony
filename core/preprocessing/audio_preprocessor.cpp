@@ -1,12 +1,5 @@
 #include "audio_preprocessor.hpp"
-#include "../../tools/tqdm.cpp"  
-#include <essentia/essentia.h>
-#include <essentia/algorithmfactory.h>
-#include <filesystem>
-#include <iostream>
-#include <cmath>
-#include <algorithm>
-#include <random>
+
 
 using namespace essentia;
 using namespace standard;
@@ -24,7 +17,7 @@ AudioPreprocessor::~AudioPreprocessor() {
     essentia::shutdown();
 }
 
-bool AudioPreprocessor::processFile(const std::string& inputPath, const std::string& outputPath) {
+bool AudioPreprocessor::processFile(const std::string& inputPath, const std::string& outputPath, float& duration) {
     if (!fs::exists(inputPath)) {
         std::cerr << "Input file does not exist: " << inputPath << std::endl;
         return false;
@@ -32,7 +25,33 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
     
     try {
         int sampleRate = 0;
-        std::vector<Real> audioBuffer = readAudioFile(inputPath, sampleRate);
+        std::vector<Real> audioBuffer = AudioUtil::readAudioFile(inputPath, duration ,sampleRate);
+
+        if (audioBuffer.empty()) {
+            return false;
+        }
+
+        // Resample to 16kHz if necessary
+        const int targetSampleRate = 16000;
+        if (sampleRate != targetSampleRate) {
+            
+            AlgorithmFactory& factory = AlgorithmFactory::instance();
+            Algorithm* resampler = factory.create("Resample",
+                                            "inputSampleRate", sampleRate,
+                                            "outputSampleRate", targetSampleRate,
+                                            "quality", 1);  // 1 is high quality
+            
+            std::vector<Real> resampledBuffer;
+            resampler->input("signal").set(audioBuffer);
+            resampler->output("signal").set(resampledBuffer);
+            resampler->compute();
+            
+            // Replace original buffer with resampled buffer
+            audioBuffer = resampledBuffer;
+            sampleRate = targetSampleRate;
+            
+            delete resampler;
+        }
         
         // Apply processing steps according to enabled flags
         if (silenceRemovalEnabled) {
@@ -49,7 +68,12 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
         
         if (trimEnabled) {
             trimAudio(audioBuffer, sampleRate);
+            if (audioBuffer.empty()) {
+                return false;
+            }
         }
+
+        duration = static_cast<float>(audioBuffer.size()) / static_cast<float>(sampleRate);
         
         // Create output directory if it doesn't exist
         fs::path outputDir = fs::path(outputPath).parent_path();
@@ -66,24 +90,95 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
     }
 }
 
+
+std::vector<std::string> getTokens(const std::string& line, char delimiter) {
+    std::vector<std::string> tokens;
+    std::stringstream ss(line);
+    std::string token;
+    
+    while (std::getline(ss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    
+    return tokens;
+}
+
+void saveMetadata(const std::string& outputPath, const std::vector<std::string>& metadata) {
+    std::string cleanedMetadataFilePath = outputPath + "/processed_metadata.tsv";
+    std::ofstream cleanedFile(cleanedMetadataFilePath);
+    if (!cleanedFile.is_open())
+    {
+        throw std::runtime_error("Could not create cleaned metadata file: " + cleanedMetadataFilePath);
+    }
+
+    // Write header
+    cleanedFile << "path\tage\tgender\tduration\n";
+    Tqdm saveProgress(metadata.size(), "Saving cleaned metadata");
+    for (const auto &metadata : metadata)
+    {
+        cleanedFile << metadata << "\n";
+        saveProgress.update();
+    }
+
+    cleanedFile.close();
+    saveProgress.finish();
+}
+
+// input format:  client_id	path	sentence	up_votes	down_votes	age	gender	accent	label
 std::vector<std::string> AudioPreprocessor::processBatch(
-    const std::vector<std::string>& inputPaths,
+    const std::string& metadataPath,
     const std::string& outputDir,
+    const int maxFiles,
     bool showProgress) {
     
     std::vector<std::string> outputPaths;
+    std::vector<std::string> outputMatadata;
+
+    std::string dataPath = metadataPath.substr(0, metadataPath.find_last_of("/"));
+
+    std::ifstream file(metadataPath);
+    if (!file.is_open())
+    {
+        throw std::runtime_error("Could not open metadata file: " + metadataPath);
+    }
+
+    // Count number of lines for progress bar
+    int lineCount = 0;
+    std::string line;
+    while (std::getline(file, line))
+    {
+        lineCount++;
+    }
+
+    file.clear();
+    file.seekg(0, std::ios::beg);
     
+    lineCount = std::min(lineCount, maxFiles);
+
     // Use Tqdm for progress tracking
-    Tqdm tqdm(inputPaths.size(), "Processing audio files");
+    Tqdm tqdm(lineCount, "Processing audio files");
     
-    for (const std::string& inputPath : inputPaths) {
-        // Create output path with same filename but in the output directory
-        fs::path inputFile = fs::path(inputPath);
+    while(std::getline(file,line)) {
+        if (lineCount <= 0) {
+            break;
+        }
+   
+        std::vector<std::string> tokens = getTokens(line, '\t');
+        if (tokens.size() < 7) {
+            std::cerr << "Invalid line format: " << line << std::endl;
+            continue;
+        }
+
+        fs::path inputFile = fs::path(tokens[1]);
         fs::path outputPath = fs::path(outputDir) / inputFile.filename();
         outputPath.replace_extension(".wav"); // For consistency
         
-        bool success = processFile(inputPath, outputPath.string());
+        float duration = -1.0f;
+        bool success = processFile(dataPath + "/" + tokens[1], outputPath.string(), duration);
+
         if (success) {
+            std::string cleanedLine = tokens[1] + "\t" + tokens[5] + "\t" + tokens[6] + "\t" + std::to_string(duration);
+            outputMatadata.push_back(cleanedLine);
             outputPaths.push_back(outputPath.string());
         }
         
@@ -91,13 +186,20 @@ std::vector<std::string> AudioPreprocessor::processBatch(
         if (showProgress) {
             tqdm.update();
         }
+
+        lineCount--;
     }
+
+    file.close();
     
     // Finish the progress bar
     if (showProgress) {
         tqdm.finish();
     }
-    
+
+    saveMetadata(outputDir, outputMatadata);
+
+    std::cout << "Kept " << outputMatadata.size() << " valid files out of " << maxFiles << " total entries" << std::endl;
     return outputPaths;
 }
 
@@ -108,11 +210,12 @@ void AudioPreprocessor::trimAudio(std::vector<essentia::Real>& audioBuffer, int 
     int targetSamples = static_cast<int>(targetDuration * sampleRate);
     
     // If the buffer is longer than the target, trim it
-    if (int(int(audioBuffer.size())) > targetSamples) {
+    if (int(audioBuffer.size()) > targetSamples) {
         audioBuffer.resize(targetSamples);
+    } 
+    else if (int(audioBuffer.size()) < targetSamples) {
+        audioBuffer.clear();
     }
-    // Note: We could pad with silence if the audio is shorter, but usually
-    // that's not necessary for ML training
 }
 
 void AudioPreprocessor::normalizeVolume(std::vector<essentia::Real>& audioBuffer) {
@@ -306,36 +409,6 @@ float AudioPreprocessor::calculateRMS(const std::vector<essentia::Real>& buffer)
     return std::sqrt(sumSquared / buffer.size());
 }
 
-std::vector<essentia::Real> AudioPreprocessor::readAudioFile(const std::string& filePath, int& sampleRate) {
-    std::vector<Real> audioBuffer;
-    
-    try {
-        // Get algorithm factory
-        AlgorithmFactory& factory = AlgorithmFactory::instance();
-        
-        // Create audio loader
-        Algorithm* audioLoader = factory.create("MonoLoader", "filename", filePath);
-        
-        // Output buffer
-        audioLoader->output("audio").set(audioBuffer);
-        
-        // Compute
-        audioLoader->compute();
-        
-        // Get sample rate
-        sampleRate = audioLoader->parameter("sampleRate").toInt();
-        
-        // Clean up
-        delete audioLoader;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Error loading audio file: " << e.what() << std::endl;
-        throw;
-    }
-    
-    return audioBuffer;
-}
-
 bool AudioPreprocessor::writeAudioFile(const std::vector<essentia::Real>& buffer, int sampleRate, const std::string& filePath) {
     try {
         // Get algorithm factory
@@ -351,7 +424,8 @@ bool AudioPreprocessor::writeAudioFile(const std::vector<essentia::Real>& buffer
         Algorithm* audioWriter = factory.create("MonoWriter",
                                              "filename", filePath,
                                              "sampleRate", sampleRate,
-                                             "format", "wav");
+                                             "format", "wav",
+                                            "bitrate", 32);
         
         // Set input
         audioWriter->input("audio").set(buffer);

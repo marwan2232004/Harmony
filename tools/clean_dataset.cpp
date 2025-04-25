@@ -7,8 +7,6 @@ void printUsage(const char* programName) {
     std::cout << "Options:" << std::endl;
     std::cout << "  --dataset-path=<path>         Path to the dataset directory" << std::endl;
     std::cout << "  --metadata-file=<file>       Path to the metadata file" << std::endl;
-    std::cout << "  --target-duration=<seconds>   Target duration for audio files" << std::endl;
-    std::cout << "  --duration-tolerance=<seconds> Duration tolerance for audio files" << std::endl;
     std::cout << "  --samples-per-category=<num>  Number of samples per category" << std::endl;
     std::cout << "  --clean-tsv            Clean TSV file" << std::endl;
     std::cout << "  --help                        Display this help message" << std::endl;
@@ -27,10 +25,8 @@ std::string getParamValue(const std::string& arg, const std::string& paramName) 
 
 int main(int argc, char* argv[]) {
     // Default parameters
-    std::string datasetPath = "data/datasets";
-    std::string metadataFile = "data/datasets/filtered_data_labeled.tsv";
-    float targetDuration = 5.0f;  // 5 seconds
-    float durationTolerance = 1.0f;  // ±1 second
+    std::string datasetPath = "data/processed";
+    std::string metadataFile = "data/processed/processed_metadata.tsv";
     int samplesPerCategory = 500;
     bool cleanTSV = false;
 
@@ -51,10 +47,6 @@ int main(int argc, char* argv[]) {
                 datasetPath = value;
             } else if (!(value = getParamValue(arg, "metadata-file")).empty()) {
                 metadataFile = value;
-            } else if (!(value = getParamValue(arg, "target-duration")).empty()) {
-                targetDuration = std::stof(value);
-            } else if (!(value = getParamValue(arg, "duration-tolerance")).empty()) {
-                durationTolerance = std::stof(value);
             } else if (!(value = getParamValue(arg, "samples-per-category")).empty()) {
                 samplesPerCategory = std::stoi(value);
             }
@@ -66,10 +58,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Starting dataset cleaning process..." << std::endl;
         std::cout << "Dataset path: " << datasetPath << std::endl;
         std::cout << "Metadata file: " << metadataFile << std::endl;
-        std::cout << "Target duration: " << targetDuration << " seconds (±" << durationTolerance << ")" << std::endl;
         
         // Create and configure dataset cleaner
-        DatasetCleaner cleaner(datasetPath, metadataFile, targetDuration, durationTolerance, samplesPerCategory);
+        DatasetCleaner cleaner(datasetPath, metadataFile, samplesPerCategory);
         
         // Set specific age groups and genders we want
         cleaner.setAgeGroups({"twenties", "fifties"});

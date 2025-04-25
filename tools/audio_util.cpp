@@ -7,13 +7,11 @@ using namespace essentia;
 using namespace standard;
 namespace fs = std::filesystem;
 
-float AudioUtil::getAudioDuration(const std::string& audioFilePath) {
+std::vector<essentia::Real> AudioUtil::readAudioFile(const std::string& audioFilePath, float& duration, int& sampleRate) {
     if (!fs::exists(audioFilePath)) {
         throw std::runtime_error("Audio file does not exist: " + audioFilePath);
     }
     
-    essentia::init();
-
     try {
         // Get algorithm factory
         AlgorithmFactory& factory = AlgorithmFactory::instance();
@@ -28,19 +26,22 @@ float AudioUtil::getAudioDuration(const std::string& audioFilePath) {
         
         // Compute to load the audio
         audioLoader->compute();
+
+        sampleRate = audioLoader->parameter("sampleRate").toInt();
         
         // Get the duration (samples / sample rate)
-        float duration = static_cast<float>(audioBuffer.size()) / 
-                        static_cast<float>(audioLoader->parameter("sampleRate").toInt());
+        duration = static_cast<float>(audioBuffer.size()) / 
+                        static_cast<float>(sampleRate);
+
         
         // Clean up
         delete audioLoader;
-        essentia::shutdown();
         
-        return duration;
+        return audioBuffer;
     }
     catch (const std::exception& e) {
-        essentia::shutdown();
-        return -1.0f; 
+        sampleRate = 0;
+        duration = -1.0f;
+        return std::vector<Real>(); 
     }
 }
