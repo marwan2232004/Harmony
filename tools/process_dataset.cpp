@@ -13,9 +13,11 @@ namespace fs = std::filesystem;
 void printUsage(const char* programName) {
     std::cout << "Usage: " << programName << " [options]" << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  --tsv-file=<path>     : TSV file containing audio file paths (default: data/metadata.tsv)" << std::endl;
+    std::cout << "  --tsv-file=<path>      : TSV file containing audio file paths (default: data/metadata.tsv)" << std::endl;
     std::cout << "  --output-dir=<path>    : Output directory for processed files (default: data/processed)" << std::endl;
-    std::cout << "  --max-files=<num>     : Maximum number of files to process (default: 15000)" << std::endl;
+    std::cout << "  --max-files=<num>      : Maximum number of files to process (default: 15000)" << std::endl;
+    std::cout << "  --start-line=<num>     : Start processing from this line (default: 0)" << std::endl;
+    std::cout << "  --end-line=<num>       : Stop processing at this line (default: -1, process all)" << std::endl;
     std::cout << "  --target-duration=<sec>: Target duration in seconds (default: 5.0)" << std::endl;
     std::cout << "  --target-rms=<level>   : Target RMS level (0.0-1.0) (default: 0.2)" << std::endl;
     std::cout << "  --noise-threshold=<lvl>: Noise threshold (default: 0.01)" << std::endl;
@@ -30,6 +32,11 @@ void printUsage(const char* programName) {
     std::cout << "  The first column should contain the path to the audio file." << std::endl;
     std::cout << "  Other columns are optional and will be ignored." << std::endl;
     std::cout << "  Example: path/to/audio.wav\tage\tgender\tduration" << std::endl;
+    std::cout << "Batch Processing:" << std::endl;
+    std::cout << "  To process a large dataset in chunks, use --start-line and --end-line." << std::endl;
+    std::cout << "  Example: process 1000 files at a time:" << std::endl;
+    std::cout << "  ./process_dataset --start-line=0 --end-line=1000" << std::endl;
+    std::cout << "  ./process_dataset --start-line=1000 --end-line=2000" << std::endl;
 }
 
 // Parse a command line parameter in the format --param=value
@@ -51,6 +58,8 @@ int main(int argc, char* argv[]) {
     float silenceThreshold = 0.01f;
     int minSilenceMs = 500;
     int maxFiles = 15000;
+    int startLine = 0;
+    int endLine = -1;
     
     bool enableTrim = true;
     bool enableNormalize = true;
@@ -92,15 +101,20 @@ int main(int argc, char* argv[]) {
                 minSilenceMs = std::stoi(value);
             } else if (!(value = getParamValue(arg, "max-files")).empty()) {
                 maxFiles = std::stoi(value);
+            } else if (!(value = getParamValue(arg, "start-line")).empty()) {
+                startLine = std::stoi(value);
+            } else if (!(value = getParamValue(arg, "end-line")).empty()) {
+                endLine = std::stoi(value);
             }
         }
     }
     
     // Display configuration
     std::cout << "=== Audio Dataset Processor ===" << std::endl;
-    std::cout << "TSV file:          " << tsvFile << std::endl;
+    std::cout << "TSV file:           " << tsvFile << std::endl;
     std::cout << "Output directory:   " << outputDir << std::endl;
-    std::cout << "Max files:         " << maxFiles << std::endl;
+    std::cout << "Max files:          " << maxFiles << std::endl;
+    std::cout << "Processing range:   " << startLine << " to " << (endLine == -1 ? "end" : std::to_string(endLine)) << std::endl;
     std::cout << "Target duration:    " << targetDuration << " seconds" << std::endl;
     std::cout << "Target RMS:         " << targetRMS << std::endl;
     std::cout << "Noise threshold:    " << noiseThreshold << std::endl;
@@ -140,19 +154,25 @@ int main(int argc, char* argv[]) {
     preprocessor.setSilenceThreshold(silenceThreshold);
     preprocessor.setMinSilenceMs(minSilenceMs);
     
-    // Process all files with progress bar
+    // Process files with progress bar
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    std::vector<std::string> processedFiles = preprocessor.processBatch(tsvFile, outputDir, maxFiles, true);
+    std::vector<std::string> processedFiles = preprocessor.processBatch(
+        tsvFile, outputDir, maxFiles, true, startLine, endLine);
     
     auto endTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
+    
+
+    int nextStartLine = (endLine == -1) ? startLine + processedFiles.size() : endLine;
     
     // Final report
     std::cout << "\nProcessing Results:" << std::endl;
     std::cout << "Time taken: " << duration << " seconds" << std::endl;
     std::cout << "Processed files saved to: " << outputDir << std::endl;
-
+    std::cout << "Next batch should start at line: " << nextStartLine << std::endl;
+    std::cout << "To continue processing, run:" << std::endl;
+    std::cout << "./process_dataset --start-line=" << nextStartLine << " --end-line=" << (nextStartLine + maxFiles) << std::endl;
     
     return 0;
 }

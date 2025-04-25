@@ -103,24 +103,31 @@ std::vector<std::string> getTokens(const std::string& line, char delimiter) {
     return tokens;
 }
 
-void saveMetadata(const std::string& outputPath, const std::vector<std::string>& metadata) {
-    std::string cleanedMetadataFilePath = outputPath + "/processed_metadata.tsv";
-    std::ofstream cleanedFile(cleanedMetadataFilePath);
-    if (!cleanedFile.is_open())
-    {
-        throw std::runtime_error("Could not create cleaned metadata file: " + cleanedMetadataFilePath);
+void saveMetadata(const std::string& outputPath, const std::vector<std::string>& metadata, bool append = false) {
+    std::string metadataFilePath = outputPath + "/processed_metadata.tsv";
+    
+    std::ofstream metadataFile;
+    if (append && fs::exists(metadataFilePath)) {
+        metadataFile.open(metadataFilePath, std::ios::app); // Append mode
+        std::cout << "Appending to existing metadata file" << std::endl;
+    } else {
+        metadataFile.open(metadataFilePath);
+        // Write header only if creating a new file
+        metadataFile << "path\tage\tgender\tduration\n";
+        std::cout << "Creating new metadata file" << std::endl;
+    }
+    
+    if (!metadataFile.is_open()) {
+        throw std::runtime_error("Could not open metadata file: " + metadataFilePath);
     }
 
-    // Write header
-    cleanedFile << "path\tage\tgender\tduration\n";
-    Tqdm saveProgress(metadata.size(), "Saving cleaned metadata");
-    for (const auto &metadata : metadata)
-    {
-        cleanedFile << metadata << "\n";
+    Tqdm saveProgress(metadata.size(), "Saving metadata");
+    for (const auto &entry : metadata) {
+        metadataFile << entry << "\n";
         saveProgress.update();
     }
 
-    cleanedFile.close();
+    metadataFile.close();
     saveProgress.finish();
 }
 
@@ -129,40 +136,59 @@ std::vector<std::string> AudioPreprocessor::processBatch(
     const std::string& metadataPath,
     const std::string& outputDir,
     const int maxFiles,
-    bool showProgress) {
-    
+    bool showProgress,
+    int startLine,  // Start from this line (0-indexed)
+    int endLine)   // Process until this line (-1 means until the end)
+{
     std::vector<std::string> outputPaths;
-    std::vector<std::string> outputMatadata;
+    std::vector<std::string> outputMetadata;
 
     std::string dataPath = metadataPath.substr(0, metadataPath.find_last_of("/"));
 
     std::ifstream file(metadataPath);
-    if (!file.is_open())
-    {
+    if (!file.is_open()) {
         throw std::runtime_error("Could not open metadata file: " + metadataPath);
     }
 
-    // Count number of lines for progress bar
-    int lineCount = 0;
+    // Count lines more efficiently - don't read entire file contents
+    int totalLines = 0;
     std::string line;
-    while (std::getline(file, line))
-    {
-        lineCount++;
+    
+    // If endLine is -1, count all lines to determine total
+    if (endLine == -1) {
+        while (std::getline(file, line)) {
+            totalLines++;
+        }
+        endLine = totalLines;
+    } else {
+        totalLines = endLine;
     }
-
+    
     file.clear();
     file.seekg(0, std::ios::beg);
     
-    lineCount = std::min(lineCount, maxFiles);
-
-    // Use Tqdm for progress tracking
-    Tqdm tqdm(lineCount, "Processing audio files");
+    // Skip to startLine
+    for (int i = 0; i < startLine; i++) {
+        if (!std::getline(file, line)) {
+            std::cerr << "Reached end of file before startLine" << std::endl;
+            return outputPaths;
+        }
+    }
     
-    while(std::getline(file,line)) {
-        if (lineCount <= 0) {
+    // Calculate how many lines we'll actually process
+    int linesToProcess = std::min(endLine - startLine, maxFiles);
+    
+    // Use Tqdm for progress tracking
+    Tqdm tqdm(linesToProcess, "Processing audio files " + std::to_string(startLine) + 
+              " to " + std::to_string(startLine + linesToProcess));
+    
+    int processedCount = 0;
+    
+    while(std::getline(file, line)) {
+        if (processedCount >= linesToProcess || processedCount >= maxFiles) {
             break;
         }
-   
+        
         std::vector<std::string> tokens = getTokens(line, '\t');
         if (tokens.size() < 7) {
             std::cerr << "Invalid line format: " << line << std::endl;
@@ -178,7 +204,7 @@ std::vector<std::string> AudioPreprocessor::processBatch(
 
         if (success) {
             std::string cleanedLine = tokens[1] + "\t" + tokens[5] + "\t" + tokens[6] + "\t" + std::to_string(duration);
-            outputMatadata.push_back(cleanedLine);
+            outputMetadata.push_back(cleanedLine);
             outputPaths.push_back(outputPath.string());
         }
         
@@ -187,7 +213,7 @@ std::vector<std::string> AudioPreprocessor::processBatch(
             tqdm.update();
         }
 
-        lineCount--;
+        processedCount++;
     }
 
     file.close();
@@ -197,9 +223,12 @@ std::vector<std::string> AudioPreprocessor::processBatch(
         tqdm.finish();
     }
 
-    saveMetadata(outputDir, outputMatadata);
+    // Save or append metadata
+    saveMetadata(outputDir, outputMetadata, startLine > 0);
 
-    std::cout << "Kept " << outputMatadata.size() << " valid files out of " << maxFiles << " total entries" << std::endl;
+    std::cout << "Kept " << outputMetadata.size() << " valid files out of " << linesToProcess << " processed entries" << std::endl;
+    std::cout << "Total progress: " << (startLine + processedCount) << "/" << totalLines << " lines" << std::endl;
+    
     return outputPaths;
 }
 

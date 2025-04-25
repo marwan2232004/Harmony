@@ -25,7 +25,9 @@ public:
         const std::string& metadataPath,
         const std::string& outputDir,
         const int maxFiles,
-        bool showProgress);
+        bool showProgress,
+        int startLine = 0,
+        int endLine = -1);
     
     // Configuration setters
     void enableTrimming(bool enable = true) { trimEnabled = enable; }
