@@ -19,6 +19,9 @@ find_path(ESSENTIA_INCLUDE essentia/essentia.h)
 
 find_package(dlib REQUIRED)
 
+find_package(Boost REQUIRED COMPONENTS serialization system)
+find_package(OpenMP REQUIRED)
+
 find_path( SHARK_INCLUDE_DIR
   NAMES shark/Data/Dataset.h
   HINTS /usr/local/include
@@ -42,6 +45,7 @@ endif()
 # ────────────────────────────────────────────────────────────────────────────────
 file(GLOB SOURCES "core/*.cpp")
 file(GLOB EXTRACTORS "core/feature_extractors/*.cpp")
+file(GLOB STACKING "core/stacking/*.cpp")
 file(GLOB MODELS "core/model/*.cpp")
 file(GLOB CLEANER "core/cleaning/*.cpp")
 file(GLOB AUDIO "core/audio/*.cpp")
@@ -51,24 +55,26 @@ file(GLOB PREPROCESSOR "core/preprocessing/*.cpp")
 file(GLOB TOOLS_ALL "tools/*.cpp")
 set(TOOLS "")
 foreach(TOOL_FILE ${TOOLS_ALL})
-    if(NOT ${TOOL_FILE} MATCHES "clean_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "process_dataset.cpp")
+    if(NOT ${TOOL_FILE} MATCHES "clean_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "process_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "extract_features.cpp" AND NOT ${TOOL_FILE} MATCHES "stacking.cpp")
         list(APPEND TOOLS ${TOOL_FILE})
     endif()
 endforeach()
 
 # Header files
-file(GLOB HEADERS_INCLUDE "include/*.hpp")
+file(GLOB HEADERS_INCLUDE "include/*.h")
 file(GLOB HEADERS_AUDIO "core/audio/*.hpp")
 file(GLOB HEADERS_CLEANING "core/cleaning/*.hpp")
 file(GLOB HEADERS_TOOLS "tools/*.hpp")
 file(GLOB HEADERS_PREPROCESSOR "core/preprocessing/*.hpp")
+file(GLOB HEADERS_STACKING "core/stacking/*.hpp")
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Main executable - WITHOUT clean_dataset.cpp
 # ────────────────────────────────────────────────────────────────────────────────
 add_executable(main 
     ${SOURCES} 
-    ${EXTRACTORS} 
+    ${EXTRACTORS}
+    ${STACKING}
     ${MODELS} 
     ${CLEANER} 
     ${AUDIO} 
@@ -79,17 +85,24 @@ add_executable(main
     ${HEADERS_TOOLS}
 )
 
+target_compile_options(main PRIVATE
+    ${OpenMP_CXX_FLAGS}
+)
+
 target_include_directories(main PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
     ${SHARK_INCLUDE_DIR}
+    ${OpenMP_CXX_INCLUDE_DIRS}
 )
 
 target_link_libraries(main PRIVATE
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
     ${SHARK_LIBRARY}
+    ${OpenMP_CXX_LIBRARIES}
+    ${Boost_LIBRARIES}
     stdc++fs  # Add filesystem library
 )
 
@@ -143,5 +156,66 @@ target_include_directories(process_dataset PRIVATE
 target_link_libraries(process_dataset PRIVATE
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
+    stdc++fs  # Add filesystem library
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Add extract_features as a separate executable
+# ────────────────────────────────────────────────────────────────────────────────
+add_executable(extract_features 
+    tools/extract_features.cpp
+    ${EXTRACTORS}
+    ${TOOLS}
+    ${HEADERS_INCLUDE}
+    ${HEADERS_TOOLS}
+)
+
+# Include directories for extract_features
+target_include_directories(extract_features PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ESSENTIA_INCLUDE}
+    ${dlib_INCLUDE_DIRS}
+)
+
+# Link libraries for extract_features
+target_link_libraries(extract_features PRIVATE
+    ${ESSENTIA_LIB}
+    ${dlib_LIBRARIES}
+    stdc++fs  # Add filesystem library
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Add stacking as a separate executable
+# ────────────────────────────────────────────────────────────────────────────────
+add_executable(stacking 
+    tools/stacking.cpp
+    ${STACKING}
+    ${MODELS}
+    ${TOOLS}
+    ${HEADERS_INCLUDE}
+    ${HEADERS_STACKING}
+    ${HEADERS_TOOLS}
+)
+
+target_compile_options(stacking PRIVATE
+    ${OpenMP_CXX_FLAGS}
+)
+
+# Include directories for stacking
+target_include_directories(stacking PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ESSENTIA_INCLUDE}
+    ${dlib_INCLUDE_DIRS}
+    ${SHARK_INCLUDE_DIR}
+    ${OpenMP_CXX_INCLUDE_DIRS}
+)
+
+# Link libraries for stacking
+target_link_libraries(stacking PRIVATE
+    ${ESSENTIA_LIB}
+    ${dlib_LIBRARIES}
+    ${SHARK_LIBRARY}
+    ${OpenMP_CXX_LIBRARIES}
+    ${Boost_LIBRARIES}
     stdc++fs  # Add filesystem library
 )
