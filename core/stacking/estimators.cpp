@@ -199,7 +199,7 @@ namespace harmony
         y_pred.resize(n);
         for (int i = 0; i < n; ++i)
         {
-            y_pred(i) = predictions.element(i) >= 0.5 ? 1 : 0;
+            y_pred(i) = static_cast<int>(predictions.element(i));
         }
     }
 }
