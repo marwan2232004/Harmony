@@ -4,12 +4,42 @@ project(AudioML)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
+# ────────────────────────────────────────────────────────────────────────────────
+# Set output directories for binaries and libraries
+# ────────────────────────────────────────────────────────────────────────────────
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../bin")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../bin")
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Find external libraries: Essentia, Dlib, Shark
+# ────────────────────────────────────────────────────────────────────────────────
 find_library(ESSENTIA_LIB essentia)
 find_path(ESSENTIA_INCLUDE essentia/essentia.h)
 
 find_package(dlib REQUIRED)
 
+find_path( SHARK_INCLUDE_DIR
+  NAMES shark/Data/Dataset.h
+  HINTS /usr/local/include
+)
+
+find_library( SHARK_LIBRARY
+  NAMES shark
+  HINTS /usr/local/lib /usr/lib
+)
+
+if( NOT SHARK_INCLUDE_DIR )
+    message(FATAL_ERROR "Could not find Shark headers (Data/Dataset.h) inside /usr/local/include/shark")
+endif()
+
+if( NOT SHARK_LIBRARY )
+    message(FATAL_ERROR "Could not find Shark library (libshark.so) inside /usr/local/lib")
+endif()
+
+# ────────────────────────────────────────────────────────────────────────────────
 # Collect all source files
+# ────────────────────────────────────────────────────────────────────────────────
 file(GLOB SOURCES "core/*.cpp")
 file(GLOB EXTRACTORS "core/feature_extractors/*.cpp")
 file(GLOB MODELS "core/model/*.cpp")
@@ -33,7 +63,9 @@ file(GLOB HEADERS_CLEANING "core/cleaning/*.hpp")
 file(GLOB HEADERS_TOOLS "tools/*.hpp")
 file(GLOB HEADERS_PREPROCESSOR "core/preprocessing/*.hpp")
 
+# ────────────────────────────────────────────────────────────────────────────────
 # Main executable - WITHOUT clean_dataset.cpp
+# ────────────────────────────────────────────────────────────────────────────────
 add_executable(main 
     ${SOURCES} 
     ${EXTRACTORS} 
@@ -51,15 +83,19 @@ target_include_directories(main PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
+    ${SHARK_INCLUDE_DIR}
 )
 
 target_link_libraries(main PRIVATE
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
+    ${SHARK_LIBRARY}
     stdc++fs  # Add filesystem library
 )
 
+# ────────────────────────────────────────────────────────────────────────────────
 # Add clean_dataset as a separate executable
+# ────────────────────────────────────────────────────────────────────────────────
 add_executable(clean_dataset 
     tools/clean_dataset.cpp
     ${CLEANER}
@@ -85,7 +121,9 @@ target_link_libraries(clean_dataset PRIVATE
 )
 
 
-# Add clean_dataset as a separate executable
+# ────────────────────────────────────────────────────────────────────────────────
+# Add process_dataset as a separate executable
+# ────────────────────────────────────────────────────────────────────────────────
 add_executable(process_dataset 
     tools/process_dataset.cpp
     ${PREPROCESSOR}
@@ -94,14 +132,14 @@ add_executable(process_dataset
     ${HEADERS_TOOLS}
 )
 
-# Include directories for clean_dataset
+# Include directories for process_dataset
 target_include_directories(process_dataset PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
 )
 
-# Link libraries for clean_dataset
+# Link libraries for process_dataset
 target_link_libraries(process_dataset PRIVATE
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
