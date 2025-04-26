@@ -1,5 +1,8 @@
+#include <iostream>
+#include <cstdio>
+#include <fcntl.h>
+#include <unistd.h>
 #include "audio_preprocessor.hpp"
-
 
 using namespace essentia;
 using namespace standard;
@@ -200,7 +203,18 @@ std::vector<std::string> AudioPreprocessor::processBatch(
         outputPath.replace_extension(".wav"); // For consistency
         
         float duration = -1.0f;
+
+        // Redirect stderr to /dev/null to suppress warnings
+        int saved_stderr = dup(fileno(stderr));
+        fflush(stderr);
+        dup2(open("/dev/null", O_WRONLY), fileno(stderr));
+
         bool success = processFile(dataPath + "/" + tokens[1], outputPath.string(), duration);
+
+        // Restore stderr
+        fflush(stderr);
+        dup2(saved_stderr, fileno(stderr));
+        close(saved_stderr);
 
         if (success) {
             std::string cleanedLine = tokens[1] + "\t" + tokens[5] + "\t" + tokens[6] + "\t" + std::to_string(duration);
