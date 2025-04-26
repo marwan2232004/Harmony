@@ -217,7 +217,9 @@ std::vector<std::string> AudioPreprocessor::processBatch(
         close(saved_stderr);
 
         if (success) {
-            std::string cleanedLine = tokens[1] + "\t" + tokens[5] + "\t" + tokens[6] + "\t" + std::to_string(duration);
+            // Use the output path with .wav extension instead of the original path
+            fs::path relativePath = fs::path(outputPath).filename();
+            std::string cleanedLine = relativePath.string() + "\t" + tokens[5] + "\t" + tokens[6] + "\t" + std::to_string(duration);
             outputMetadata.push_back(cleanedLine);
             outputPaths.push_back(outputPath.string());
         }
