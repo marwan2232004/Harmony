@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(endTime - startTime).count();
     
 
-    int nextStartLine = (endLine == -1) ? startLine + processedFiles.size() : endLine;
+    int nextStartLine = (endLine == -1) ? startLine + maxFiles : endLine;
     
     // Final report
     std::cout << "\nProcessing Results:" << std::endl;
