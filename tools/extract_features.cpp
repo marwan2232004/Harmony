@@ -51,41 +51,41 @@ std::vector<std::string> getFeatureNames() {
         featureNames.push_back("mfcc_std_" + std::to_string(i));
     }
     
-    // Chroma features (36 bins + 36 stddev)
-    for (int i = 1; i <= 36; i++) {
-        featureNames.push_back("chroma_mean_" + std::to_string(i));
-    }
-    for (int i = 1; i <= 36; i++) {
-        featureNames.push_back("chroma_std_" + std::to_string(i));
-    }
+    // // Chroma features (36 bins + 36 stddev)
+    // for (int i = 1; i <= 36; i++) {
+    //     featureNames.push_back("chroma_mean_" + std::to_string(i));
+    // }
+    // for (int i = 1; i <= 36; i++) {
+    //     featureNames.push_back("chroma_std_" + std::to_string(i));
+    // }
     
-    // Spectral Contrast features (6 peaks + 6 valleys + their stddevs)
-    for (int i = 1; i <= 6; i++) {
-        featureNames.push_back("spectral_peak_mean_" + std::to_string(i));
-    }
-    for (int i = 1; i <= 6; i++) {
-        featureNames.push_back("spectral_valley_mean_" + std::to_string(i));
-    }
-    for (int i = 1; i <= 6; i++) {
-        featureNames.push_back("spectral_peak_std_" + std::to_string(i));
-    }
-    for (int i = 1; i <= 6; i++) {
-        featureNames.push_back("spectral_valley_std_" + std::to_string(i));
-    }
+    // // Spectral Contrast features (6 peaks + 6 valleys + their stddevs)
+    // for (int i = 1; i <= 6; i++) {
+    //     featureNames.push_back("spectral_peak_mean_" + std::to_string(i));
+    // }
+    // for (int i = 1; i <= 6; i++) {
+    //     featureNames.push_back("spectral_valley_mean_" + std::to_string(i));
+    // }
+    // for (int i = 1; i <= 6; i++) {
+    //     featureNames.push_back("spectral_peak_std_" + std::to_string(i));
+    // }
+    // for (int i = 1; i <= 6; i++) {
+    //     featureNames.push_back("spectral_valley_std_" + std::to_string(i));
+    // }
     
-    // Tonnetz features (12 HPCP + 1 key strength)
-    for (int i = 1; i <= 12; i++) {
-        featureNames.push_back("tonnetz_hpcp_" + std::to_string(i));
-    }
-    featureNames.push_back("tonnetz_key_strength");
+    // // Tonnetz features (12 HPCP + 1 key strength)
+    // for (int i = 1; i <= 12; i++) {
+    //     featureNames.push_back("tonnetz_hpcp_" + std::to_string(i));
+    // }
+    // featureNames.push_back("tonnetz_key_strength");
     
-    // Mel Spectrogram features (40 bands + 40 stddev)
-    for (int i = 1; i <= 40; i++) {
-        featureNames.push_back("mel_mean_" + std::to_string(i));
-    }
-    for (int i = 1; i <= 40; i++) {
-        featureNames.push_back("mel_std_" + std::to_string(i));
-    }
+    // // Mel Spectrogram features (40 bands + 40 stddev)
+    // for (int i = 1; i <= 40; i++) {
+    //     featureNames.push_back("mel_mean_" + std::to_string(i));
+    // }
+    // for (int i = 1; i <= 40; i++) {
+    //     featureNames.push_back("mel_std_" + std::to_string(i));
+    // }
     
     return featureNames;
 }
