@@ -178,12 +178,14 @@ namespace harmony
 		std::vector<std::vector<float>> train_features_;  // Store training data features
 		std::vector<int> train_labels_;                   // Store training data labels
 		std::size_t k_;                                   // Number of neighbors to consider
+		std::string metric_;                              // Distance metric to use (e.g., "euclidean", "manhattan")
 
 		/**
 		 * @brief Constructs KNN classifier
 		 * @param k Number of neighbors to consider
+		 * @param metric Distance metric to use (default: "euclidean")
 		 */
-		KNN(std::size_t k = 5);
+		KNN(std::size_t k = 5, std::string metric = "euclidean");
 
 		/**
 		 * @brief Trains the KNN model

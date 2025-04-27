@@ -117,7 +117,14 @@ namespace harmony
         });
     }
 
-    KNN::KNN(std::size_t k) : k_(k) {}
+    KNN::KNN(std::size_t k, std::string metric)
+        : k_(k), metric_(std::move(metric))
+    {
+        if (metric_ != "euclidean" && metric_ != "manhattan")
+            throw std::invalid_argument("Unknown distance metric: " + metric_);
+        if (k_ < 1)
+            throw std::invalid_argument("Number of neighbors (k) must be at least 1");
+    }
 
     void KNN::train(const MatrixXd &X, const VectorXi &y)
     {
@@ -150,7 +157,7 @@ namespace harmony
                 query[j] = static_cast<float>(X(i, j));
             }
 
-            y_pred(i) = predict_knn(train_features_, train_labels_, query, k_);
+            y_pred(i) = predict_knn(train_features_, train_labels_, query, k_, metric_);
         }
     }
 
