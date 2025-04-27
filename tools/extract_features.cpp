@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
     fs::create_directories(outputDir);
 
     // Read metadata entries
-    std::vector<std::pair<std::string, std::string>> samples;
+    std::vector<std::tuple<std::string, std::string, std::string>> samples;
     std::ifstream file(inputMetadata);
     std::string line;
     bool firstLine = true;
@@ -162,9 +162,9 @@ int main(int argc, char* argv[]) {
             continue;
         }
         std::istringstream iss(line);
-        std::string path, label;
-        if (std::getline(iss, path, '\t') && std::getline(iss, label, '\t')) {
-            samples.emplace_back(path, label);
+        std::string path, ageLabel, genderLabel;
+        if (std::getline(iss, path, '\t') && std::getline(iss, ageLabel, '\t') && std::getline(iss, genderLabel, '\t')) {
+            samples.emplace_back(path, ageLabel, genderLabel);
         }
     }
 
@@ -185,10 +185,10 @@ int main(int argc, char* argv[]) {
 
     // Split into train and test
     size_t splitIdx = samples.size() * (1.0f - testRatio);
-    auto trainSamples = std::vector<std::pair<std::string, std::string>>(
+    auto trainSamples = std::vector<std::tuple<std::string, std::string, std::string>>(
         samples.begin(), samples.begin() + splitIdx
     );
-    auto testSamples = std::vector<std::pair<std::string, std::string>>(
+    auto testSamples = std::vector<std::tuple<std::string, std::string, std::string>>(
         samples.begin() + splitIdx, samples.end()
     );
 
@@ -208,12 +208,12 @@ int main(int argc, char* argv[]) {
         for (const auto& name : featureNames) {
             out << name << "\t";
         }
-        out << "label\n";
+        out << "age\tgender\n";
 
         Tqdm tqdm(totalFiles, "🚀 Processing " + filename + " (" + std::to_string(totalFiles) + " files)");
 
         for (size_t i = 0; i < batch.size(); ++i) {
-            const auto& [relPath, label] = batch[i];
+            const auto& [relPath, ageLabel, genderLabel] = batch[i];
             fs::path fullPath = fs::path(datasetPath) / relPath;
     
             try {
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
                 for (const auto& feature : features) {
                     out << feature << "\t";
                 }
-                out << label << "\n";
+                out << ageLabel << "\t" << genderLabel << "\n";
                 successCount++;
             } catch (const std::runtime_error& e) {
                 std::cerr << "\nError processing " << fullPath << ": " << e.what() << "\n";
