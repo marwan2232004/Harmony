@@ -44,7 +44,7 @@ Dataset loadTSV(const std::string& path) {
     std::istringstream iss(line);
     std::string cell;
     while (std::getline(iss, cell, '\t')) cols++;
-    cols--; // Last column is label
+    cols -= 2; // Last 2 columns are label
     
     // Initialize matrices
     dataset.X.resize(rows, cols);
@@ -63,16 +63,18 @@ Dataset loadTSV(const std::string& path) {
             std::getline(iss, val, '\t');
             dataset.X(row_idx, col) = std::stod(val);
         }
-        std::string label;
-        std::getline(iss, label, '\t');
+        std::string ageLabel;
+        std::getline(iss, ageLabel, '\t');
+        std::string genderLabel;
+        std::getline(iss, genderLabel, '\t');
         // Label is either TWENTIES or FIFTIES
         // Convert to 0 or 1
-        if (label == "twenties") {
-            dataset.y(row_idx) = 0;
-        } else if (label == "fifties") {
-            dataset.y(row_idx) = 1;
+        if (ageLabel == "twenties") {
+            dataset.y(row_idx) = genderLabel == "female" ? 0 : 1;
+        } else if (ageLabel == "fifties") {
+            dataset.y(row_idx) = genderLabel == "female" ? 2 : 3;
         } else {
-            std::cerr << "Unknown label: " << label << std::endl;
+            std::cerr << "Unknown age label: " << ageLabel << std::endl;
             continue;
         }
         
