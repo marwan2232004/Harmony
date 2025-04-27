@@ -11,21 +11,21 @@ std::vector<float> getFeatureVector(std::string path) {
         path, sampleRate, 400, 160, 26, 13, 0, 8000, 22, 2, "dbamp", factory, featureVector, true
     );
 
-    std::vector<float> ChromaFeatures = extractChromaFeatures(
-        path, sampleRate, 32768, 16384, 27.5f, 36, 0.0f, "unit_max", "hann", factory, featureVector, true
-    );
+    // std::vector<float> ChromaFeatures = extractChromaFeatures(
+    //     path, sampleRate, 32768, 16384, 27.5f, 36, 0.0f, "unit_max", "hann", factory, featureVector, true
+    // );
 
-    std::vector<float> SpectralContrastFeatures = extractSpectralContrastFeatures(
-        path, sampleRate, 2048, 1024, 6, 20, 8000, 0.4f, 1.0f, factory, featureVector, true
-    );
+    // std::vector<float> SpectralContrastFeatures = extractSpectralContrastFeatures(
+    //     path, sampleRate, 2048, 1024, 6, 20, 8000, 0.4f, 1.0f, factory, featureVector, true
+    // );
 
-    std::vector<float> TonnetzFeatures = extractTonnetzFeatures(
-        path, sampleRate, factory, featureVector, true
-    );
+    // std::vector<float> TonnetzFeatures = extractTonnetzFeatures(
+    //     path, sampleRate, factory, featureVector, true
+    // );
 
-    std::vector<float> MelSpectrogramFeatures = extractMelSpectrogramFeatures(
-        path, sampleRate, 2048, 1024, 40, 20, 8000, "htkMel", "linear", "unit_sum", "power", factory, featureVector, true
-    );
+    // std::vector<float> MelSpectrogramFeatures = extractMelSpectrogramFeatures(
+    //     path, sampleRate, 2048, 1024, 40, 20, 8000, "htkMel", "linear", "unit_sum", "power", factory, featureVector, true
+    // );
 
     return featureVector;
 }
