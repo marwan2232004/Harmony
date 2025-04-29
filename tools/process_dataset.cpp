@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
     // Process files with progress bar
     auto startTime = std::chrono::high_resolution_clock::now();
     
-    std::vector<std::string> processedFiles = preprocessor.processBatch(
+    preprocessor.processBatch(
         tsvFile, outputDir, maxFiles, true, startLine, endLine);
     
     auto endTime = std::chrono::high_resolution_clock::now();
