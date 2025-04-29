@@ -13,13 +13,13 @@ namespace harmony
     void SVM::train(const MatrixXd &X, const VectorXi &y)
     {
         std::vector<sample_type> samples;
-        std::vector<double> labels;
+        std::vector<int> labels;
         samples.reserve(X.rows());
         labels.reserve(X.rows());
         for (size_t i = 0; i < X.rows(); ++i)
         {
             samples.push_back(to_dlib_vec(X.row(i)));
-            labels.push_back((double)y(i));
+            labels.push_back(y(i));
         }
         decision_function_ = ovo_trainer.train(samples, labels);
     }
@@ -30,91 +30,103 @@ namespace harmony
         for (int i = 0; i < X.rows(); ++i)
         {
             auto sample = to_dlib_vec(X.row(i));
-            unsigned long pred = decision_function_(sample);
-            y_pred(i) = static_cast<int>(pred);
+            int pred = decision_function_(sample);
+            y_pred(i) = pred;
         }
     }
 
-    ExtraTrees::ExtraTrees(std::size_t nTrees, std::size_t minLeafSize)
-    {
-        trainer.setNTrees(nTrees);
-        trainer.setNodeSize(minLeafSize);
-        // trainer.splitter().setSplitType(shark::RandomForestSplitter<shark::RealVector>::Random); // Random splits
-        // trainer.splitter().setNumFeaturesPerNode(0); // 0 → all features (ExtraTrees behavior)
-    }
+    ExtraTrees::ExtraTrees(std::size_t nTrees, std::size_t minLeafSize, std::size_t nClasses)
+        : nClasses_(nClasses), nTrees_(nTrees), minLeafSize_(minLeafSize) {}
 
     void ExtraTrees::train(const MatrixXd &X, const VectorXi &y)
     {
-        shark::ClassificationDataset dataset;
-        shark::Data<shark::RealVector> inputs(X.rows(), shark::RealVector(X.cols()));
-        shark::Data<unsigned int> labels(y.size());
-
-        for (size_t i = 0; i < X.rows(); ++i)
-        {
-            inputs.element(i) = shark::RealVector(to_shark_vec(X.row(i)));
-            labels.element(i) = static_cast<unsigned int>(y(i));
+        arma::mat data(X.cols(), X.rows());
+        for (size_t i = 0; i < X.rows(); ++i) {
+            for (size_t j = 0; j < X.cols(); ++j) {
+                data(j, i) = X(i, j);
+            }
         }
 
-        dataset = shark::ClassificationDataset(inputs, labels);
-        // trainer.train(model, dataset);
+        arma::Row<size_t> labels(y.size());
+        for (size_t i = 0; i < y.size(); ++i) {
+            labels[i] = static_cast<size_t>(y(i));
+        }
+
+        mlpack::RandomForest<> rf;
+        rf = mlpack::RandomForest<>(data, labels,
+                                        nClasses_,
+                                        nTrees_,
+                                        minLeafSize_,
+                                        0,     // minimum gain split
+                                        0,     // maximum depth
+                                        1); 
+
+        model_ = std::move(rf);
     }
 
     void ExtraTrees::predict(const MatrixXd &X, VectorXi &y_pred) const
     {
-        y_pred.resize(X.rows());
-        shark::Data<shark::RealVector> inputs(X.rows(), shark::RealVector(X.cols()));
-
-        for (size_t i = 0; i < X.rows(); ++i)
-        {
-            inputs.element(i) = shark::RealVector(to_shark_vec(X.row(i)));
+        arma::mat testData(X.cols(), X.rows());
+        for (size_t i = 0; i < X.rows(); ++i) {
+            for (size_t j = 0; j < X.cols(); ++j) {
+                testData(j, i) = X(i, j);
+            }
         }
 
-        // auto predictions = model(inputs);
-        // for(size_t i=0; i<predictions.size(); ++i) {
-        //     y_pred(i) = static_cast<int>(predictions.element(i));
-        // }
+        arma::Row<size_t> predictions;
+        model_.Classify(testData, predictions);
+
+        y_pred.resize(X.rows());
+        for (size_t i = 0; i < X.rows(); ++i) {
+            y_pred(i) = static_cast<int>(predictions(i));
+        }
     }
 
-    RandomForest::RandomForest(std::size_t nTrees, std::size_t minLeafSize)
-    {
-        trainer.setNTrees(nTrees);
-        trainer.setNodeSize(minLeafSize);
-    }
-
+    RandomForest::RandomForest(std::size_t nTrees, std::size_t minLeafSize, std::size_t nClasses)
+        : nClasses_(nClasses), nTrees_(nTrees), minLeafSize_(minLeafSize) {}
+    
     void RandomForest::train(const MatrixXd &X, const VectorXi &y)
     {
-        std::size_t n = X.rows(), d = X.cols();
-        std::vector<shark::RealVector> inputVecs;
-        std::vector<unsigned int> labelVecs;
-        inputVecs.reserve(n);
-        labelVecs.reserve(n);
-        for (std::size_t i = 0; i < n; ++i)
-        {
-            Eigen::VectorXd row = X.row(i);
-            inputVecs.emplace_back(row.data(), row.data() + d);
-            labelVecs.push_back(static_cast<unsigned int>(y(i)));
+        arma::mat data(X.cols(), X.rows());
+        for (size_t i = 0; i < X.rows(); ++i) {
+            for (size_t j = 0; j < X.cols(); ++j) {
+                data(j, i) = X(i, j);
+            }
         }
-        shark::Data<shark::RealVector> inputs = shark::createDataFromRange(inputVecs);
-        shark::Data<unsigned int> labels = shark::createDataFromRange(labelVecs);
 
-        shark::ClassificationDataset dataset(inputs, labels);
-        trainer.train(model, dataset);
+        arma::Row<size_t> labels(y.size());
+        for (size_t i = 0; i < y.size(); ++i) {
+            labels[i] = static_cast<size_t>(y(i));
+        }
+
+        mlpack::RandomForest<> rf;
+        rf = mlpack::RandomForest<>(data, labels,
+                                        nClasses_,
+                                        nTrees_,
+                                        minLeafSize_,
+                                        0,     // minimum gain split
+                                        0,     // maximum depth
+                                        5); 
+
+        model_ = std::move(rf);
     }
 
     void RandomForest::predict(const MatrixXd &X, VectorXi &y_pred) const
     {
-        std::vector<shark::RealVector> inputVecs;
-        inputVecs.reserve(X.rows());
-    
-        for (Eigen::Index i = 0; i < X.rows(); ++i)
-            inputVecs.emplace_back(X.row(i).data(), X.row(i).data() + X.cols());
-    
-        auto inputs = shark::createDataFromRange(inputVecs);
-        auto predictions = model(inputs);
-    
-        y_pred = VectorXi::NullaryExpr(X.rows(), [&](Eigen::Index i) {
-            return static_cast<int>(predictions.element(i));
-        });
+        arma::mat testData(X.cols(), X.rows());
+        for (size_t i = 0; i < X.rows(); ++i) {
+            for (size_t j = 0; j < X.cols(); ++j) {
+                testData(j, i) = X(i, j);
+            }
+        }
+
+        arma::Row<size_t> predictions;
+        model_.Classify(testData, predictions);
+
+        y_pred.resize(X.rows());
+        for (size_t i = 0; i < X.rows(); ++i) {
+            y_pred(i) = static_cast<int>(predictions(i));
+        }
     }
 
     KNN::KNN(std::size_t k, std::string metric)
@@ -161,52 +173,43 @@ namespace harmony
         }
     }
 
-    LR::LR(double lambda1, double lambda2)
-        : lambda_(lambda1), lambda2_(lambda2),
-          trainer(lambda1, lambda2)
+    LR::LR(double lambda, std::size_t nClasses)
+        : lambda_(lambda), nClasses_(nClasses)
     {}
 
     void LR::train(const MatrixXd &X, const VectorXi &y)
     {
         const int n = X.rows(), d = X.cols();
-        std::vector<shark::RealVector> inputVecs;
-        std::vector<unsigned int> labelVecs;
-        inputVecs.reserve(n);
-        labelVecs.reserve(n);
-    
-        for (int i = 0; i < n; ++i)
-        {
-            Eigen::VectorXd row = X.row(i);
-            inputVecs.emplace_back(row.data(), row.data() + d);
-            labelVecs.push_back(static_cast<unsigned int>(y(i)));
-        }
-    
-        auto inputs = shark::createDataFromRange(inputVecs);
-        auto labels = shark::createDataFromRange(labelVecs);
-        shark::ClassificationDataset dataset(inputs, labels);
-    
-        trainer.train(model, dataset);
+        
+        arma::mat trainData(d, n);
+        for (size_t i = 0; i < n; i++)
+            for (size_t j = 0; j < d; j++)
+                trainData(j, i) = X(i, j);
+        
+        arma::Row<size_t> labels(n);
+        for (size_t i = 0; i < n; ++i)
+            labels(i) = static_cast<size_t>(y(i));
+        
+        model_ = mlpack::SoftmaxRegression<>(trainData,
+            labels,
+            nClasses_,
+            lambda_);
     }
 
     void LR::predict(const MatrixXd &X, VectorXi &y_pred) const
     {
         const int n = X.rows(), d = X.cols();
-        std::vector<shark::RealVector> inputVecs;
-        inputVecs.reserve(n);
-    
-        for (int i = 0; i < n; ++i)
-        {
-            Eigen::VectorXd row = X.row(i);
-            inputVecs.emplace_back(row.data(), row.data() + d);
-        }
-    
-        auto inputs = shark::createDataFromRange(inputVecs);
-        auto predictions = model(inputs);
-    
+
+        arma::mat testData(d, n);
+        for (size_t i = 0; i < n; ++i)
+            for (size_t j = 0; j < d; ++j)
+            testData(j, i) = X(i, j);
+
+        arma::Row<size_t> predictions;
+        model_.Classify(testData, predictions);
+
         y_pred.resize(n);
-        for (int i = 0; i < n; ++i)
-        {
-            y_pred(i) = static_cast<int>(predictions.element(i));
-        }
+        for (size_t i = 0; i < n; ++i)
+            y_pred(i) = static_cast<int>(predictions(i));
     }
 }
