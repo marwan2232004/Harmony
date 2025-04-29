@@ -4,6 +4,7 @@
 #include <random>
 #include <algorithm>
 #include <cassert>
+#include <omp.h>
 #include <eigen3/Eigen/Dense>
 
 using Eigen::MatrixXd;

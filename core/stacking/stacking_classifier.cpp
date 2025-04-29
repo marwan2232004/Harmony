@@ -20,47 +20,53 @@ void StackingClassifier::fit(const MatrixXd& X, const VectorXi& y)
     const int N = X.rows();
     const int D = X.cols();
     const int L = L_;
-    // 1) generate fold‐indices
+
+    // Precompute the folds
     std::vector<int> idx(N);
     std::iota(idx.begin(), idx.end(), 0);
     std::shuffle(idx.begin(), idx.end(), rng_);
+    std::vector<std::vector<int>> fold_indices(K_);
     std::vector<int> fold_of(N);
     for (int i = 0; i < N; ++i)
-        fold_of[idx[i]] = i % K_;
+        fold_indices[idx[i] % K_].push_back(i);
 
-    // 2) allocate meta‐feature matrix Z (N × L)
+    // Meta‐features matrix Z (N × L)
     MatrixXd Z = MatrixXd::Zero(N, L);
 
-    // 3) OUT-OF-FOLD predictions
+    // Parallelize the training of base learners
+    #pragma omp parallel for
     for (int l = 0; l < L; ++l) {
         for (int k = 0; k < K_; ++k) {
-            // build train/test split for fold k
-            std::vector<int> train_idx, test_idx;
-            for (int i = 0; i < N; ++i) {
-                if (fold_of[i] == k) test_idx.push_back(i);
-                else                train_idx.push_back(i);
+            const auto& test_idx = fold_indices[k];
+            std::vector<int> train_idx;
+            for (int k_inner = 0; k_inner < K_; ++k_inner) {
+                if (k_inner != k) {
+                    train_idx.insert(train_idx.end(),
+                        fold_indices[k_inner].begin(), fold_indices[k_inner].end());
+                }
             }
-            // pack X_train, y_train
+
+            // Train base model l on train_idx
+            std::cout << "Training base model " << l + 1 << " on fold " << k + 1 << std::endl;
             MatrixXd Xtr(train_idx.size(), D);
             VectorXi ytr(train_idx.size());
             for (size_t i = 0; i < train_idx.size(); ++i) {
                 Xtr.row(i) = X.row(train_idx[i]);
-                ytr(i)     = y(train_idx[i]);
+                ytr(i) = y(train_idx[i]);
             }
-            // train base learner l
-            std::cout << "Training base model " << l + 1 << " on fold " << k + 1 << std::endl;
             bases_[l]->train(Xtr, ytr);
 
-            // predict on held‐out fold
+            // Predict on test_idx
             MatrixXd Xte(test_idx.size(), D);
             for (size_t i = 0; i < test_idx.size(); ++i)
                 Xte.row(i) = X.row(test_idx[i]);
+
             VectorXi ypred(test_idx.size());
             bases_[l]->predict(Xte, ypred);
 
-            // fill Z[test_idx, l] = ypred
+            // Write to Z without critical section (thread-safe per column l)
             for (size_t i = 0; i < test_idx.size(); ++i)
-                Z(test_idx[i], l) = double(ypred(i));
+                Z(test_idx[i], l) = static_cast<double>(ypred(i));
         }
     }
 

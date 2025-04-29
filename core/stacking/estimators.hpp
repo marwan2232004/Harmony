@@ -4,6 +4,8 @@
 #include <memory>
 #include <algorithm>
 #include <dlib/svm_threaded.h>
+#include <dlib/random_forest.h>
+#include <dlib/statistics.h>
 #include <dlib/matrix.h>
 #include <dlib/serialize.h>
 #include <shark/ObjectiveFunctions/Loss/ZeroOneLoss.h>
@@ -14,9 +16,14 @@
 #include <shark/Algorithms/Trainers/LogisticRegression.h>
 #include <shark/Algorithms/Trainers/RFTrainer.h>
 #include <shark/Algorithms/NearestNeighbors/TreeNearestNeighbors.h>
+#include <shark/ObjectiveFunctions/Loss/ZeroOneLoss.h>
 #include <shark/Data/Csv.h>
 #include <eigen3/Eigen/Dense>
 #include "stacking_classifier.hpp"
+#include <mlpack/core.hpp>
+#include <mlpack/methods/softmax_regression/softmax_regression.hpp>
+#include <mlpack/methods/random_forest/random_forest.hpp>
+
 
 using Eigen::MatrixXd;
 using Eigen::VectorXi;
@@ -71,7 +78,7 @@ namespace harmony
 	{
 		using sample_type = dlib::matrix<double, 0, 1>;
 		using kernel_type = dlib::radial_basis_kernel<sample_type>;
-		using ovo_trainer_type = dlib::one_vs_one_trainer<dlib::any_trainer<sample_type>>;
+		using ovo_trainer_type = dlib::one_vs_one_trainer<dlib::any_trainer<sample_type>, int>;;
 		using df_type = typename ovo_trainer_type::trained_function_type;
 		
 		// trainers
@@ -109,19 +116,13 @@ namespace harmony
 	 */
 	struct ExtraTrees : BaseEstimator
 	{
-		// using ETTrainer = shark::ForestTrainer<
-		// 	shark::DecisionTree<shark::RealVector>,
-		// 	ExtraTreeTrainer<shark::RealVector>
-		// >;
-		shark::RFTrainer<shark::RealVector> trainer; // Random Forest trainer configured for Extra-Trees
-		shark::RFClassifier<shark::RealVector> model;	  // Trained Extra-Trees model
-
 		/**
 		 * @brief Constructs Extra-Trees classifier
 		 * @param nTrees Number of trees in the forest
 		 * @param minLeafSize Minimum samples required in a leaf node
 		 */
-		ExtraTrees(std::size_t nTrees = 100, std::size_t minLeafSize = 1);
+		ExtraTrees(std::size_t nTrees = 100, std::size_t minLeafSize = 1,
+			std::size_t nClasses = 2);
 
 		/**
 		 * @brief Trains the Extra-Trees model
@@ -136,6 +137,12 @@ namespace harmony
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
 		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+	
+	private:
+		mlpack::RandomForest<> model_;
+		std::size_t nTrees_;
+		std::size_t nClasses_;
+		std::size_t minLeafSize_;
 	};
 
 	/**
@@ -144,15 +151,13 @@ namespace harmony
 	 */
 	struct RandomForest : BaseEstimator
 	{
-		shark::RFTrainer<unsigned int> trainer;
-		shark::RFClassifier<unsigned int> model;
-
 		/**
 		 * @brief Constructs Random Forest classifier
 		 * @param nTrees Number of trees in the forest
 		 * @param minLeafSize Minimum samples required in a leaf node
 		 */
-		RandomForest(std::size_t nTrees = 100, std::size_t minLeafSize = 1);
+		RandomForest(std::size_t nTrees = 100, std::size_t minLeafSize = 1, 
+			std::size_t nClasses = 2);
 
 		/**
 		 * @brief Trains the Random Forest model
@@ -167,6 +172,12 @@ namespace harmony
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
 		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+	
+	private:
+		mlpack::RandomForest<> model_;
+        std::size_t nTrees_;
+		std::size_t nClasses_;
+        std::size_t minLeafSize_;
 	};
 
 	/**
@@ -208,16 +219,12 @@ namespace harmony
 	 */
 	struct LR : BaseEstimator
 	{
-		shark::LogisticRegression<shark::RealVector> trainer;
-		shark::LogisticRegression<shark::RealVector>::ModelType model;
-		double lambda_, lambda2_;
 
 		/**
 		 * @brief Constructs Logistic Regression classifier
-		 * @param lambda1 Regularization parameter
-		 * @param lambda2 Regularization parameter
+		 * @param lambda Regularization parameter
 		 */
-		LR(double lambda1 = 1e-4, double lambda2 = 1e-4);
+		LR(double lambda, std::size_t nClasses);
 
 		/**
 		 * @brief Trains the Logistic Regression model
@@ -232,6 +239,11 @@ namespace harmony
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
 		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+	
+	private:
+		double lambda_;
+		std::size_t nClasses_;
+		mlpack::SoftmaxRegression<> model_;
 	};
 
 }
