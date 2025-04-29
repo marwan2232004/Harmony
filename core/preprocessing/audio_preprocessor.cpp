@@ -22,7 +22,7 @@ AudioPreprocessor::~AudioPreprocessor() {
 
 bool AudioPreprocessor::processFile(const std::string& inputPath, const std::string& outputPath, float& duration) {
     if (!fs::exists(inputPath)) {
-        std::cerr << "Input file does not exist: " << inputPath << std::endl;
+        std::cerr << "Input file does not exist: " << inputPath << '\n';
         return false;
     }
     
@@ -52,7 +52,7 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
             // Replace original buffer with resampled buffer
             audioBuffer = resampledBuffer;
             sampleRate = targetSampleRate;
-            
+
             delete resampler;
         }
         
@@ -61,6 +61,13 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
             removeSilence(audioBuffer, sampleRate);
         }
         
+        if (trimEnabled) {
+            trimAudio(audioBuffer, sampleRate);
+            if (audioBuffer.empty()) {
+                return false;
+            }
+        }
+
         if (noiseReductionEnabled) {
             reduceNoise(audioBuffer);
         }
@@ -69,12 +76,6 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
             normalizeVolume(audioBuffer);
         }
         
-        if (trimEnabled) {
-            trimAudio(audioBuffer, sampleRate);
-            if (audioBuffer.empty()) {
-                return false;
-            }
-        }
 
         duration = static_cast<float>(audioBuffer.size()) / static_cast<float>(sampleRate);
         
@@ -88,7 +89,7 @@ bool AudioPreprocessor::processFile(const std::string& inputPath, const std::str
         return writeAudioFile(audioBuffer, sampleRate, outputPath);
     }
     catch (const std::exception& e) {
-        std::cerr << "Error processing file " << inputPath << ": " << e.what() << std::endl;
+        std::cerr << "Error processing file " << inputPath << ": " << e.what() << '\n';
         return false;
     }
 }
@@ -106,36 +107,9 @@ std::vector<std::string> getTokens(const std::string& line, char delimiter) {
     return tokens;
 }
 
-void saveMetadata(const std::string& outputPath, const std::vector<std::string>& metadata, bool append = false) {
-    std::string metadataFilePath = outputPath + "/processed_metadata.tsv";
-    
-    std::ofstream metadataFile;
-    if (append && fs::exists(metadataFilePath)) {
-        metadataFile.open(metadataFilePath, std::ios::app); // Append mode
-        std::cout << "Appending to existing metadata file" << std::endl;
-    } else {
-        metadataFile.open(metadataFilePath);
-        // Write header only if creating a new file
-        metadataFile << "path\tage\tgender\tduration\n";
-        std::cout << "Creating new metadata file" << std::endl;
-    }
-    
-    if (!metadataFile.is_open()) {
-        throw std::runtime_error("Could not open metadata file: " + metadataFilePath);
-    }
-
-    Tqdm saveProgress(metadata.size(), "Saving metadata");
-    for (const auto &entry : metadata) {
-        metadataFile << entry << "\n";
-        saveProgress.update();
-    }
-
-    metadataFile.close();
-    saveProgress.finish();
-}
 
 // input format:  client_id	path	sentence	up_votes	down_votes	age	gender	accent	label
-std::vector<std::string> AudioPreprocessor::processBatch(
+int AudioPreprocessor::processBatch(
     const std::string& metadataPath,
     const std::string& outputDir,
     const int maxFiles,
@@ -143,8 +117,15 @@ std::vector<std::string> AudioPreprocessor::processBatch(
     int startLine,  // Start from this line (0-indexed)
     int endLine)   // Process until this line (-1 means until the end)
 {
-    std::vector<std::string> outputPaths;
-    std::vector<std::string> outputMetadata;
+    
+    std::string metadataFilePath = outputDir + "/processed_metadata.tsv";
+    std::ofstream metadataFile;
+    if (startLine > 0 && fs::exists(metadataFilePath)) {
+        metadataFile.open(metadataFilePath, std::ios::app); // Append mode
+    } else {
+        metadataFile.open(metadataFilePath);
+        metadataFile << "path\tage\tgender\tduration\n"; // Header
+    }
 
     std::string dataPath = metadataPath.substr(0, metadataPath.find_last_of("/"));
 
@@ -173,8 +154,8 @@ std::vector<std::string> AudioPreprocessor::processBatch(
     // Skip to startLine
     for (int i = 0; i < startLine; i++) {
         if (!std::getline(file, line)) {
-            std::cerr << "Reached end of file before startLine" << std::endl;
-            return outputPaths;
+            std::cerr << "Reached end of file before startLine" << '\n';
+            return {};
         }
     }
     
@@ -185,7 +166,7 @@ std::vector<std::string> AudioPreprocessor::processBatch(
     Tqdm tqdm(linesToProcess, "Processing audio files " + std::to_string(startLine) + 
               " to " + std::to_string(startLine + linesToProcess));
     
-    int processedCount = 0;
+    int processedCount = 0, validCount = 0;
     
     while(std::getline(file, line)) {
         if (processedCount >= linesToProcess || processedCount >= maxFiles) {
@@ -194,7 +175,7 @@ std::vector<std::string> AudioPreprocessor::processBatch(
         
         std::vector<std::string> tokens = getTokens(line, '\t');
         if (tokens.size() < 7) {
-            std::cerr << "Invalid line format: " << line << std::endl;
+            std::cerr << "Invalid line format: " << line << '\n';
             continue;
         }
 
@@ -220,8 +201,11 @@ std::vector<std::string> AudioPreprocessor::processBatch(
             // Use the output path with .wav extension instead of the original path
             fs::path relativePath = fs::path(outputPath).filename();
             std::string cleanedLine = relativePath.string() + "\t" + tokens[5] + "\t" + tokens[6] + "\t" + std::to_string(duration);
-            outputMetadata.push_back(cleanedLine);
-            outputPaths.push_back(outputPath.string());
+
+            metadataFile << cleanedLine << "\n";
+            metadataFile.flush(); 
+
+            validCount++;
         }
         
         // Update progress using Tqdm
@@ -240,17 +224,16 @@ std::vector<std::string> AudioPreprocessor::processBatch(
     }
 
     // Save or append metadata
-    saveMetadata(outputDir, outputMetadata, startLine > 0);
 
-    std::cout << "Kept " << outputMetadata.size() << " valid files out of " << linesToProcess << " processed entries" << std::endl;
-    std::cout << "Total progress: " << (startLine + processedCount) << "/" << totalLines << " lines" << std::endl;
+    std::cout << "Kept " << validCount << " valid files out of " << linesToProcess << " processed entries" << '\n';
+    std::cout << "Total progress: " << (startLine + processedCount) << "/" << totalLines << " lines" << '\n';
     
-    return outputPaths;
+    return validCount;
 }
 
 // Individual processing functions
 
-void AudioPreprocessor::trimAudio(std::vector<essentia::Real>& audioBuffer, int sampleRate) {
+void AudioPreprocessor::trimAudio(std::vector<essentia::Real>& audioBuffer, int& sampleRate) {
     // Calculate number of samples to keep
     int targetSamples = static_cast<int>(targetDuration * sampleRate);
     
@@ -361,11 +344,11 @@ void AudioPreprocessor::reduceNoise(std::vector<essentia::Real>& audioBuffer) {
         delete ifft;
     }
     catch (const std::exception& e) {
-        std::cerr << "Error in noise reduction: " << e.what() << std::endl;
+        std::cerr << "Error in noise reduction: " << e.what() << '\n';
     }
 }
 
-void AudioPreprocessor::removeSilence(std::vector<essentia::Real>& audioBuffer, int sampleRate) {
+void AudioPreprocessor::removeSilence(std::vector<essentia::Real>& audioBuffer, int& sampleRate) {
     if (audioBuffer.empty()) {
         return;
     }
@@ -454,7 +437,7 @@ float AudioPreprocessor::calculateRMS(const std::vector<essentia::Real>& buffer)
     return std::sqrt(sumSquared / buffer.size());
 }
 
-bool AudioPreprocessor::writeAudioFile(const std::vector<essentia::Real>& buffer, int sampleRate, const std::string& filePath) {
+bool AudioPreprocessor::writeAudioFile(const std::vector<essentia::Real>& buffer, int& sampleRate, const std::string& filePath) {
     try {
         // Get algorithm factory
         AlgorithmFactory& factory = AlgorithmFactory::instance();
@@ -484,7 +467,7 @@ bool AudioPreprocessor::writeAudioFile(const std::vector<essentia::Real>& buffer
         return true;
     }
     catch (const std::exception& e) {
-        std::cerr << "Error writing audio file: " << e.what() << std::endl;
+        std::cerr << "Error writing audio file: " << e.what() << '\n';
         return false;
     }
 }

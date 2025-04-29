@@ -21,7 +21,7 @@ public:
     bool processFile(const std::string& inputPath, const std::string& outputPath, float& duration);
     
     // Process a batch of files
-    std::vector<std::string> processBatch(
+    int processBatch(
         const std::string& metadataPath,
         const std::string& outputDir,
         const int maxFiles,
@@ -56,12 +56,12 @@ private:
     bool silenceRemovalEnabled = true;
     
     // Individual processing functions
-    void trimAudio(std::vector<essentia::Real>& audioBuffer, int sampleRate);
+    void trimAudio(std::vector<essentia::Real>& audioBuffer, int& sampleRate);
     void normalizeVolume(std::vector<essentia::Real>& audioBuffer);
     void reduceNoise(std::vector<essentia::Real>& audioBuffer);
-    void removeSilence(std::vector<essentia::Real>& audioBuffer, int sampleRate);
+    void removeSilence(std::vector<essentia::Real>& audioBuffer, int& sampleRate);
     
     // Utility methods
     float calculateRMS(const std::vector<essentia::Real>& buffer);
-    bool writeAudioFile(const std::vector<essentia::Real>& buffer, int sampleRate, const std::string& filePath);
+    bool writeAudioFile(const std::vector<essentia::Real>& buffer, int& sampleRate, const std::string& filePath);
 };
