@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     std::string target = "both";
     int svm_c = 1000;
     double svm_gamma = 0.0001;
-    int rf_trees = 300;
+    int rf_trees = 700;
     int knn_k = 3;
     std::string knn_metric = "euclidean";
     int n_folds = 5;
@@ -192,21 +192,23 @@ int main(int argc, char* argv[]) {
     Dataset test_data = loadTSV(test_path, target);
     auto load_end = std::chrono::high_resolution_clock::now();
     
+    size_t nClasses = (target == "both" ? 4 : 2);
+
     std::cout << "\n📊 Dataset Statistics:\n";
     std::cout << "▸ Training Samples: " << COLOR_CYAN << train_data.X.rows() << COLOR_RESET << "\n";
     std::cout << "▸ Test Samples:     " << COLOR_CYAN << test_data.X.rows() << COLOR_RESET << "\n";
     std::cout << "▸ Features:         " << COLOR_CYAN << train_data.X.cols() << COLOR_RESET << "\n";
-    std::cout << "▸ Classes:          " << COLOR_CYAN << (target == "both" ? 4 : 2) << COLOR_RESET << "\n";
+    std::cout << "▸ Classes:          " << COLOR_CYAN << nClasses << COLOR_RESET << "\n";
     std::cout << std::string(60, '-') << "\n\n";
 
     // Initialize models
     printColored("⚡ Initializing models...", COLOR_GREEN);
     std::vector<std::unique_ptr<BaseEstimator>> base_models;
     base_models.push_back(std::make_unique<harmony::SVM>(svm_c, svm_gamma));
-    // base_models.push_back(std::make_unique<harmony::ExtraTrees>(200, 5));
-    base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5));
-    base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
-    auto meta_model = std::make_unique<harmony::LR>(0.01);
+    // base_models.push_back(std::make_unique<harmony::ExtraTrees>(400, 5, nClasses));
+    // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, nClasses));
+    // base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
+    auto meta_model = std::make_unique<harmony::LR>(0.01, nClasses);
 
     // Create stacker
     StackingClassifier stacker(

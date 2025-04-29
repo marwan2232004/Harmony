@@ -12,12 +12,28 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../bin")
 
 # ────────────────────────────────────────────────────────────────────────────────
+# Find BLAS and LAPACK first since they're key dependencies
+# ────────────────────────────────────────────────────────────────────────────────
+find_package(OpenMP REQUIRED)
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+message(STATUS "BLAS libraries: ${BLAS_LIBRARIES}")
+message(STATUS "LAPACK libraries: ${LAPACK_LIBRARIES}")
+
+# Explicitly set library flags if needed
+set(MATH_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+
+# ────────────────────────────────────────────────────────────────────────────────
 # Find external libraries: Essentia, Dlib, Shark
 # ────────────────────────────────────────────────────────────────────────────────
 find_library(ESSENTIA_LIB essentia)
 find_path(ESSENTIA_INCLUDE essentia/essentia.h)
 
+find_package(Armadillo REQUIRED)
+
 find_package(dlib REQUIRED)
+
+set(MLPACK_INCLUDE_DIR "/usr/local/include")
 
 find_package(Boost REQUIRED COMPONENTS serialization system)
 find_package(OpenMP REQUIRED)
@@ -95,15 +111,26 @@ target_include_directories(main PRIVATE
     ${dlib_INCLUDE_DIRS}
     ${SHARK_INCLUDE_DIR}
     ${OpenMP_CXX_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
+    ${Armadillo_INCLUDE_DIRS}
 )
 
 target_link_libraries(main PRIVATE
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
     ${SHARK_LIBRARY}
-    ${OpenMP_CXX_LIBRARIES}
     ${Boost_LIBRARIES}
     stdc++fs  # Add filesystem library
+    # The ordering of these libraries is critical for resolving dependencies
+    ${Armadillo_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    ${OpenMP_CXX_LIBRARIES}
+    # Explicit linking as a fallback
+    -larmadillo
+    -llapack 
+    -lopenblas
+    -lblas
 )
 
 # ────────────────────────────────────────────────────────────────────────────────
@@ -124,6 +151,7 @@ target_include_directories(clean_dataset PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
 )
 
 # Link libraries for clean_dataset
@@ -150,6 +178,7 @@ target_include_directories(process_dataset PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
 )
 
 # Link libraries for process_dataset
@@ -175,6 +204,7 @@ target_include_directories(extract_features PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
 )
 
 # Link libraries for extract_features
@@ -208,14 +238,39 @@ target_include_directories(stacking PRIVATE
     ${dlib_INCLUDE_DIRS}
     ${SHARK_INCLUDE_DIR}
     ${OpenMP_CXX_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
+    ${Armadillo_INCLUDE_DIRS}
 )
 
+# Find BLAS and LAPACK packages more explicitly
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
+# Add these variables for direct linking
+set(BLAS_LIB "-lblas -lopenblas")
+set(LAPACK_LIB "-llapack")
+
+# Make the BLAS_LIBRARIES variable more explicit if needed
+if(NOT BLAS_LIBRARIES)
+    set(BLAS_LIBRARIES ${BLAS_LIB})
+endif()
+
 # Link libraries for stacking
-target_link_libraries(stacking PRIVATE
+target_link_libraries(stacking
+    OpenMP::OpenMP_CXX
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
     ${SHARK_LIBRARY}
+    ${Boost_LIBRARIES} 
+    stdc++fs
+    # The ordering of these libraries is critical for resolving dependencies
+    ${Armadillo_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES}
     ${OpenMP_CXX_LIBRARIES}
-    ${Boost_LIBRARIES}
-    stdc++fs  # Add filesystem library
+    # Explicit linking as a fallback
+    -larmadillo
+    -llapack 
+    -lopenblas
+    -lblas
 )
