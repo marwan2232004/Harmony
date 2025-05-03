@@ -21,15 +21,6 @@ RUN git clone https://github.com/davisking/dlib.git && \
     ldconfig && \
     cd ../..
 
-# Clone and build Shark
-RUN git clone https://github.com/Shark-ML/Shark.git && \
-    cd Shark && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make -j"$(nproc)" && \
-    make install && ldconfig && \
-    cd ../..
-
 # Clone and build Cereal
 RUN git clone https://github.com/USCiLab/cereal.git && \
     cd cereal && \
@@ -61,7 +52,7 @@ RUN git clone https://github.com/mlpack/mlpack.git && \
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
              -DBUILD_PYTHON_BINDINGS=OFF \
              -DBUILD_TESTS=OFF && \
-    make -j5 && \
+    make -j"$(nproc)" && \
     make install && \
     ldconfig && \
     cd ../.. && \
