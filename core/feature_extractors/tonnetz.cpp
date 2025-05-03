@@ -9,10 +9,21 @@ std::vector<Real> extractTonnetzFeatures(
     int sampleRate,
     AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<Real> inputAudio,
     bool appendToFeatureVector
 ) {
     std::vector<Real> audioBuffer;
-    Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
+    if(inputAudio.empty()) {
+        // Load audio file
+        Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
+        if (audioBuffer.empty()) {
+            std::cerr << "Error loading audio file: " << filename << std::endl;
+            return {};
+        }
+        delete loader;
+    } else {
+        audioBuffer = inputAudio;
+    }
 
     Algorithm* tonal = factory.create("TonalExtractor");
     
@@ -60,7 +71,6 @@ std::vector<Real> extractTonnetzFeatures(
     
     features.push_back(key_strength);
 
-    delete loader;
     delete tonal;
 
     if (appendToFeatureVector) {

@@ -48,6 +48,7 @@ file(GLOB MODELS "core/model/*.cpp")
 file(GLOB CLEANER "core/cleaning/*.cpp")
 file(GLOB AUDIO "core/audio/*.cpp")
 file(GLOB PREPROCESSOR "core/preprocessing/*.cpp")
+file(GLOB UTILS "utils/*.cpp")
 
 # IMPORTANT: Collect tools but PROPERLY exclude clean_dataset.cpp
 file(GLOB TOOLS_ALL "tools/*.cpp")
@@ -65,6 +66,7 @@ file(GLOB HEADERS_CLEANING "core/cleaning/*.hpp")
 file(GLOB HEADERS_TOOLS "tools/*.hpp")
 file(GLOB HEADERS_PREPROCESSOR "core/preprocessing/*.hpp")
 file(GLOB HEADERS_STACKING "core/stacking/*.hpp")
+file(GLOB HEADERS_UTILS "core/utils/*.hpp")
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Main executable - WITHOUT clean_dataset.cpp
@@ -81,6 +83,7 @@ add_executable(clean_dataset
     ${HEADERS_AUDIO}
     ${HEADERS_CLEANING}
     ${HEADERS_TOOLS}
+    ${HEADERS_UTILS}
 )
 
 # Include directories for clean_dataset
@@ -106,8 +109,10 @@ add_executable(process_dataset
     tools/process_dataset.cpp
     ${PREPROCESSOR}
     ${TOOLS}
+    ${UTILS}
     ${HEADERS_PREPROCESSOR} 
     ${HEADERS_TOOLS}
+    ${HEADERS_UTILS}
 )
 
 
@@ -140,8 +145,10 @@ add_executable(extract_features
     tools/extract_features.cpp
     ${EXTRACTORS}
     ${TOOLS}
+    ${UTILS}
     ${HEADERS_INCLUDE}
     ${HEADERS_TOOLS}
+    ${HEADERS_UTILS}
 )
 
 # Include directories for extract_features
@@ -167,9 +174,11 @@ add_executable(stacking
     ${STACKING}
     ${MODELS}
     ${TOOLS}
+    ${UTILS}
     ${HEADERS_INCLUDE}
     ${HEADERS_STACKING}
     ${HEADERS_TOOLS}
+    ${HEADERS_UTILS}
 )
 
 target_compile_options(stacking PRIVATE
@@ -228,10 +237,12 @@ add_executable(inference
     ${PREPROCESSOR}
     ${MODELS}
     ${TOOLS}
+    ${UTILS}
     ${HEADERS_INCLUDE}
     ${HEADERS_STACKING}
     ${HEADERS_PREPROCESSOR} 
     ${HEADERS_TOOLS}
+    ${HEADERS_UTILS}
 )
 
 target_compile_options(inference PRIVATE

@@ -87,6 +87,7 @@ void StackingClassifier::predict(const MatrixXd& X, VectorXi& out) const
 	const int M = X.rows();
 	// build meta‐features Ztest (M × L)
 	MatrixXd Ztest(M, L_);
+    #pragma omp parallel for
 	for (int l = 0; l < L_; ++l) {
 		VectorXi ypred(M);
 		bases_[l]->predict(X, ypred);

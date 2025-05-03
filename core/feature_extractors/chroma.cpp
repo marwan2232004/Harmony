@@ -16,10 +16,21 @@ std::vector<Real> extractChromaFeatures(
     const std::string& windowType,
     AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<Real> inputAudio,
     bool appendToFeatureVector
 ) {
     std::vector<Real> audioBuffer, frame, windowedFrame;
-    Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
+    if (inputAudio.empty()) {
+        // Load audio file
+        Algorithm* loader = createAudioLoader(filename, sampleRate, audioBuffer);
+        if (audioBuffer.empty()) {
+            std::cerr << "Error loading audio file: " << filename << std::endl;
+            return {};
+        }
+        delete loader;
+    } else {
+        audioBuffer = inputAudio;
+    }
     Algorithm* frameCutter = createFrameCutter(frameSize, hopSize, audioBuffer, frame);
     Algorithm* windowing = createWindowing(frame, windowedFrame);
 
@@ -52,7 +63,6 @@ std::vector<Real> extractChromaFeatures(
         finalVec.insert(finalVec.end(), stdChroma.begin(), stdChroma.end());
     }
 
-    delete loader;
     delete frameCutter;
     delete windowing;
     delete chroma;

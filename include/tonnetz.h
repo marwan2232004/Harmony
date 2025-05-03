@@ -8,5 +8,6 @@ std::vector<float> extractTonnetzFeatures(
     int sampleRate,
     essentia::standard::AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<essentia::Real> inputAudio,
     bool appendToFeatureVector
 );

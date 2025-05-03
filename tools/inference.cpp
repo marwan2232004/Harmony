@@ -8,6 +8,7 @@
 #include <memory>
 #include <map>
 #include <unordered_map>
+#include <sys/stat.h>
 #include <essentia/essentia.h>
 #include <essentia/algorithmfactory.h>
 #include <essentia/essentiamath.h>
@@ -18,111 +19,28 @@
 #include "../core/preprocessing/audio_preprocessor.hpp"
 #include "feature_extractor.h"
 #include "feature_utils.h"
+#include "../utils/logger.hpp"
+#include "../utils/arg_parser.hpp"
 
 namespace fs = std::filesystem;
+using TYPE = harmony::ArgParser::TYPE;
+using COLOR = harmony::Logger::COLOR;
+using LEVEL = harmony::Logger::Level;
 
-// Parse command line arguments in the format --key=value
-std::unordered_map<std::string, std::string> parseArgs(int argc, char* argv[]) {
-    std::unordered_map<std::string, std::string> args;
-    
-    for (int i = 1; i < argc; i++) {
-        std::string arg = argv[i];
-        
-        // Check if argument has the format --key=value
-        if (arg.substr(0, 2) == "--" && arg.find('=') != std::string::npos) {
-            size_t equalPos = arg.find('=');
-            std::string key = arg.substr(2, equalPos - 2);
-            std::string value = arg.substr(equalPos + 1);
-            args[key] = value;
-        }
-    }
-    
-    return args;
-}
+harmony::Logger &logger = harmony::Logger::getInstance();
 
-// Sort filenames numerically (1.mp3, 2.wav, etc.)
-bool numericalSort(const std::string& a, const std::string& b) {
-    try {
-        // Extract number prefix from filenames
-        std::string numStr_a, numStr_b;
-        size_t i = 0, j = 0;
-        
-        // Get digits from start of filename a
-        while (i < a.size() && std::isdigit(a[i])) {
-            numStr_a += a[i++];
-        }
-        
-        // Get digits from start of filename b
-        while (j < b.size() && std::isdigit(b[j])) {
-            numStr_b += b[j++];
-        }
-        
-        // If both have numbers, compare numerically
-        if (!numStr_a.empty() && !numStr_b.empty()) {
-            return std::stoi(numStr_a) < std::stoi(numStr_b);
-        }
-        
-        // Fall back to lexicographical comparison
-        return a < b;
-    }
-    catch (const std::exception&) {
-        // If any conversion fails, fall back to string comparison
-        return a < b;
-    }
-}
-
-// Extract audio features using Essentia
-std::vector<float> extractFeatures(const std::string& audioFile) {
-    using namespace essentia;
-    using namespace essentia::standard;
-
-    AudioPreprocessor* audioProcessor = new AudioPreprocessor(4);
-    std::vector<essentia::Real> audioBuffer;
-    float duration = 0.0f;
-    AlgorithmFactory& factory = AlgorithmFactory::instance();
-    bool success = audioProcessor->processFile(audioFile, "", duration, factory, audioBuffer, false);
-
-    delete audioProcessor;
-
-    if (!success) {
-        std::cerr << "Error processing file: " << audioFile << std::endl;
-        return {};
-    }
-
-    int numSamples = static_cast<int>(audioBuffer.size());
-    if (numSamples == 0) {
-        std::cerr << "No audio data in file: " << audioFile << std::endl;
-        return {};
-    }
-    
-    try {
-        // Try the main feature extractor
-        return getFeatureVector("", audioBuffer);
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Warning: Feature extraction error: " << e.what() << std::endl;
-        std::cerr << "Using fallback feature extraction" << std::endl;
-        
-        // Fallback feature extraction
-        std::vector<float> features;
-        if (audioBuffer.size() > 100) {
-            for (int i = 0; i < 100; i++) {
-                int index = i * audioBuffer.size() / 100;
-                features.push_back(audioBuffer[index]);
-            }
-        }
-        return features;
-    }
-}
-
-// Load a stacking classifier from the given directory
-std::unique_ptr<StackingClassifier> loadModel(const std::string& modelDir, const std::string& configPrefix) {
+std::unique_ptr<StackingClassifier> loadModelFromFile(const std::string& modelDir, const std::string& configPrefix) {
     // Load configuration parameters from summary file
     std::ifstream summaryFile(modelDir + "/summary.txt");
     if (!summaryFile.is_open()) {
         std::cerr << "Error: Failed to open summary file" << std::endl;
         return nullptr;
     }
+    auto trim = [](std::string s) {
+        s.erase(0, s.find_first_not_of(" \t\r\n"));
+        s.erase(s.find_last_not_of(" \t\r\n") + 1);
+        return s;
+    };
 
     std::string line;
     int svm_c = 1000;
@@ -139,22 +57,21 @@ std::unique_ptr<StackingClassifier> loadModel(const std::string& modelDir, const
     std::string prefix = configPrefix.empty() ? "" : configPrefix + "_";
 
     while (std::getline(summaryFile, line)) {
-        if (line.find(prefix + "svm_c=") == 0) {
-            svm_c = std::stoi(line.substr(prefix.length() + 6));
-        } else if (line.find(prefix + "svm_gamma=") == 0) {
-            svm_gamma = std::stod(line.substr(prefix.length() + 10));
-        } else if (line.find(prefix + "rf_trees=") == 0) {
-            rf_trees = std::stoi(line.substr(prefix.length() + 9));
-        } else if (line.find(prefix + "knn_k=") == 0) {
-            knn_k = std::stoi(line.substr(prefix.length() + 6));
-        } else if (line.find(prefix + "knn_metric=") == 0) {
-            knn_metric = line.substr(prefix.length() + 11);
-        } else if (line.find(prefix + "n_classes=") == 0) {
-            n_classes = std::stoi(line.substr(prefix.length() + 10));
-        } else if (line.find(prefix + "nn_hidden1=") == 0) {
-            nn_hidden1 = std::stoi(line.substr(prefix.length() + 11));
-        } else if (line.find(prefix + "nn_hidden2=") == 0) {
-            nn_hidden2 = std::stoi(line.substr(prefix.length() + 11));
+        auto pos = line.find(':');
+        if (pos == std::string::npos) continue;
+        std::string key = line.substr(0, pos);
+        std::string value = trim(line.substr(pos + 1));
+        try {
+            if (key == "SVM C") svm_c = std::stoi(value);
+            else if (key == "SVM gamma") svm_gamma = std::stod(value);
+            else if (key == "Random Forest trees") rf_trees = std::stoi(value);
+            else if (key == "KNN k") knn_k = std::stoi(value);
+            else if (key == "KNN metric") knn_metric = value;
+            else if (key == "Neural Network hidden1") nn_hidden1 = std::stoi(value);
+            else if (key == "Neural Network hidden2") nn_hidden2 = std::stoi(value);
+            else if (key == "Cross-validation folds") n_folds = std::stoi(value);
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: failed to parse '" << key << "': '" << value << "' (" << e.what() << ")\n";
         }
     }
 
@@ -163,11 +80,13 @@ std::unique_ptr<StackingClassifier> loadModel(const std::string& modelDir, const
     // base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
     
     // Uncomment these when needed and properly implemented
-    base_models.push_back(std::make_unique<harmony::SVM_ML>(svm_c, svm_gamma));
+    logger.log("▸ Loading SVM model with C=" + std::to_string(svm_c) + " and gamma=" + std::to_string(svm_gamma), COLOR::RESET);
+    base_models.push_back(std::make_unique<harmony::SVM>(svm_c, svm_gamma));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, n_classes));
     // base_models.push_back(std::make_unique<harmony::NeuralNet>(nn_hidden1, nn_hidden2, n_classes));
     
     // Create meta model
+    logger.log("▸ Loading Logistic Regression model with lambda=0.01", COLOR::RESET);
     auto meta_model = std::make_unique<harmony::LR>(0.01, n_classes);
     
     // Create stacking classifier
@@ -183,278 +102,244 @@ std::unique_ptr<StackingClassifier> loadModel(const std::string& modelDir, const
     return classifier;
 }
 
-// Parse ground truth from TSV file
-std::map<std::string, int> parseGroundTruth(const std::string& tsvPath) {
-    std::map<std::string, int> groundTruth;
-    std::ifstream file(tsvPath);
-    
-    if (!file.is_open()) {
-        std::cerr << "Warning: Could not open ground truth file: " << tsvPath << std::endl;
-        return groundTruth;
-    }
-    
-    std::string line;
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string item, filename;
-        int label = -1;
-        
-        // Parse TSV line
-        // input format:  client_id	path	sentence	up_votes	down_votes	age	gender	accent	label
-        if (std::getline(ss, filename, '\t') && std::getline(ss, item, '\t')) {
-            std::string sentence, upVotes, downVotes, ageStr, genderStr, accent, labelStr;
-            if (!(std::getline(ss, sentence, '\t') &&
-                std::getline(ss, upVotes, '\t') &&
-                std::getline(ss, downVotes, '\t') &&
-                std::getline(ss, ageStr, '\t') &&
-                std::getline(ss, genderStr, '\t') &&
-                std::getline(ss, accent, '\t') &&
-                std::getline(ss, labelStr, '\t'))) {
-                continue;
-            }
-            int gender = (genderStr == "male") ? 1 : 0;
-            int age = (ageStr == "fifties") ? 1 : 0;
-            groundTruth[filename] = gender * 2 + age;
-        }
-    }
-    
-    return groundTruth;
-}
-
-void printUsage(const char* programName) {
-    std::cerr << "Usage: " << programName << " --data-dir=<path> --model-dir=<path> [options]\n\n"
-              << "Options:\n"
-              << "  --data-dir=<path>      Directory containing audio files\n"
-              << "  --model-dir=<path>     Directory containing model files\n"
-              << "  --ground-truth=<path>  (Optional) TSV file with ground truth labels\n"
-              << "  --mode=<mode>          Mode: 'combined' for separate gender/age models,\n"
-              << "                         'single' for one model (default: single)\n"
-              << "  --gender-prefix=<str>  Prefix for gender model files (default: 'gender')\n"
-              << "  --age-prefix=<str>     Prefix for age model files (default: 'age')\n" 
-              << std::endl;
-}
-
-int main(int argc, char* argv[]) {
-    // Parse command line arguments
-    auto args = parseArgs(argc, argv);
-    
-    // Check required arguments
-    // if (args.count("data-dir") == 0 || args.count("model-dir") == 0) {
-    //     printUsage(argv[0]);
-    //     return 1;
-    // }
-    
-    // Get argument values with defaults
+struct Config {
     std::string dataDir = "data/test";
     std::string modelDir = "models/both";
     std::string groundTruthPath = "data/datasets/filtered_data_labeled.tsv";
-    std::string mode =  "single";
-    std::string genderPrefix = args.count("gender-prefix") ? args["gender-prefix"] : "gender";
-    std::string agePrefix = args.count("age-prefix") ? args["age-prefix"] : "age";
-    
-    
-    // Verify directories exist
-    if (!fs::exists(dataDir) || !fs::is_directory(dataDir)) {
-        std::cerr << "Error: Data directory not found: " << dataDir << std::endl;
-        return 1;
+    std::string mode = "single";
+    std::string genderPrefix = "gender";
+    std::string agePrefix = "age";
+};
+
+class Inference {
+public:
+    Inference(int argc, char* argv[]) : argc(argc), argv(argv) {}
+
+    bool initialize() {
+        parseArguments();
+        return verifyDirectories();
     }
-    
-    if (!fs::exists(modelDir) || !fs::is_directory(modelDir)) {
-        std::cerr << "Error: Model directory not found: " << modelDir << std::endl;
-        return 1;
-    }
-    
-    // Get audio files and sort numerically
-    std::vector<std::string> files;
-    for (const auto& entry : fs::directory_iterator(dataDir)) {
-        if (entry.is_regular_file()) {
-            std::string filename = entry.path().filename().string();
-            std::string extension = entry.path().extension().string();
-            if (extension == ".mp3" || extension == ".wav") {
-                files.push_back(filename);
-            }
+
+    int run() {
+        logger.log("🚀 Starting inference...", COLOR::GREEN);
+        startTimer();
+        loadClassifiers();
+        auto files = getTestFiles();
+        if (files.empty()) {
+            logger.log("No audio files found in directory: " + config.dataDir, LEVEL::ERROR);
+            return 1;
         }
+
+        auto features = extractAllFeatures(files);
+        auto predictions = predict(features);
+        writeOutputs(predictions, files);
+        logElapsedTime();
+        return 0;
     }
-    // std::sort(files.begin(), files.end(), numericalSort);
-    
-    if (files.empty()) {
-        std::cerr << "Error: No audio files found in directory: " << dataDir << std::endl;
-        return 1;
-    }
-    
-    // Load ground truth if provided
-    std::map<std::string, int> groundTruth;
-    bool evaluateAccuracy = false;
-    if (!groundTruthPath.empty() && fs::exists(groundTruthPath)) {
-        groundTruth = parseGroundTruth(groundTruthPath);
-        evaluateAccuracy = !groundTruth.empty();
-        std::cout << "Loaded " << groundTruth.size() << " ground truth labels" << std::endl;
-    }
-    
-    // Load model(s) based on mode
+
+private:
+    int argc;
+    char** argv;
+    Config config;
     std::unique_ptr<StackingClassifier> classifier;
     std::unique_ptr<StackingClassifier> genderClassifier;
     std::unique_ptr<StackingClassifier> ageClassifier;
-    
-    if (mode == "combined") {
-        std::cout << "Loading gender model from " << modelDir + "/" + genderPrefix << std::endl;
-        genderClassifier = loadModel(modelDir, genderPrefix);
-        if (!genderClassifier) {
-            std::cerr << "Error: Failed to load gender model" << std::endl;
-            return 1;
+    std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+
+    void parseArguments() {
+        harmony::ArgParser parser(argc, argv);
+        parser.addOption("data-dir", "Directory containing audio files", config.dataDir);
+        parser.addOption("model-dir", "Directory containing model files", config.modelDir);
+        parser.addOption("ground-truth", "TSV file with ground truth labels", config.groundTruthPath);
+        parser.addOption("mode", "Mode: 'combined' for separate gender/age models, 'single' for one model", config.mode);
+        parser.addOption("gender-prefix", "Prefix for gender model files", config.genderPrefix);
+        parser.addOption("age-prefix", "Prefix for age model files", config.agePrefix);
+        parser.parse();
+    }
+
+    bool verifyDirectories() const {
+        if (!fs::exists(config.dataDir) || !fs::is_directory(config.dataDir)) {
+            logger.log("Data directory not found: " + config.dataDir, LEVEL::ERROR);
+            return false;
         }
-        
-        std::cout << "Loading age model from " << modelDir + "/" + agePrefix << std::endl;
-        ageClassifier = loadModel(modelDir, agePrefix);
-        if (!ageClassifier) {
-            std::cerr << "Error: Failed to load age model" << std::endl;
-            return 1;
+        if (!fs::exists(config.modelDir) || !fs::is_directory(config.modelDir)) {
+            logger.log("Model directory not found: " + config.modelDir, LEVEL::ERROR);
+            return false;
         }
-    } else {
-        // Single model mode
-        std::cout << "Loading Single model from " << modelDir << std::endl;
-        classifier = loadModel(modelDir, "");
-        if (!classifier) {
-            std::cerr << "Error: Failed to load model" << std::endl;
-            return 1;
+        return true;
+    }
+
+    void loadClassifiers() {
+        logger.log("\n⚡ Loading classifiers...", COLOR::GREEN);
+        if (config.mode == "combined") {
+            genderClassifier = this->loadModel(config.modelDir, config.genderPrefix);
+            ageClassifier = this->loadModel(config.modelDir, config.agePrefix);
+        } else if (config.mode == "single") {
+            classifier = this->loadModel(config.modelDir, "");
+        } else {
+            logger.log("Invalid mode specified: " + config.mode, LEVEL::ERROR);
         }
     }
-    
-    // Open output files
-    std::ofstream resultsFile("results.txt");
-    std::ofstream timeFile("time.txt");
-    std::ofstream accuracyFile;
-    
-    if (evaluateAccuracy) {
-        accuracyFile.open("accuracy.txt");
-        if (!accuracyFile.is_open()) {
-            std::cerr << "Warning: Could not open accuracy.txt for writing" << std::endl;
-            evaluateAccuracy = false;
+
+    std::vector<std::string> getTestFiles() const {
+        std::vector<std::string> files;
+        logger.log("\n📂 Searching for audio files in " + config.dataDir, COLOR::GREEN);
+        for (const auto& entry : fs::directory_iterator(config.dataDir)) {
+            if (!entry.is_regular_file()) continue;
+            struct stat st;
+            if (stat(entry.path().c_str(), &st) == 0 && st.st_size == 0) continue; // skip empty
+            auto ext = entry.path().extension().string();
+            if (ext == ".mp3" || ext == ".wav")
+                files.push_back(entry.path().filename().string());
         }
+        // std::sort(files.begin(), files.end(), numericalSort);
+        return files;
     }
-    
-    if (!resultsFile.is_open() || !timeFile.is_open()) {
-        std::cerr << "Error: Failed to open output files" << std::endl;
-        return 1;
+
+    static bool numericalSort(const std::string& a, const std::string& b) {
+        // same as original implementation
+        std::string na, nb;
+        size_t ia = 0, ib = 0;
+        while (ia < a.size() && isdigit(a[ia])) na += a[ia++];
+        while (ib < b.size() && isdigit(b[ib])) nb += b[ib++];
+        if (!na.empty() && !nb.empty()) return std::stoi(na) < std::stoi(nb);
+        return a < b;
     }
-    
-    // Start timing
-    auto startTime = std::chrono::high_resolution_clock::now();
-    
-    // Tracking metrics if evaluating accuracy
-    int correctPredictions = 0;
-    int totalPredictions = 0;
-    
-    // Process each file
-    for (const auto& file : files) {
-        std::string filePath = dataDir + "/" + file;
-        std::cout << "Processing " << file << std::endl;
-        
-        try {
-            // Extract features
-            std::vector<float> features = extractFeatures(filePath);
-            
-            if (features.empty()) {
-                std::cerr << "Warning: No features extracted from " << file << std::endl;
-                resultsFile << "0" << std::endl;
+
+    std::vector<std::vector<float>> extractAllFeatures(const std::vector<std::string>& files) const {
+        using namespace essentia;
+        using namespace essentia::standard;
+        AudioPreprocessor processor(1);
+        processor.enableTrimming(false);
+        processor.enableNoiseReduction(false);
+        std::vector<std::vector<float>> allFeatures;
+        harmony::Logger::ProgressBar progressBar(files.size(), "🔄 Extracting features", COLOR::BLUE);
+        for (const auto& file : files) {
+            std::string path = config.dataDir + "/" + file;
+            float duration;
+            std::vector<essentia::Real> buffer;
+            bool ok = processor.processFile(path, "", duration, AlgorithmFactory::instance(), buffer, false);
+            if (!ok || buffer.empty()) {
+                allFeatures.emplace_back();
+                progressBar.update();
                 continue;
             }
-            
-            // Convert to Eigen matrix format
-            Eigen::MatrixXd X(1, features.size());
-            for (size_t i = 0; i < features.size(); ++i) {
-                X(0, i) = features[i];
+            try {
+                allFeatures.push_back(getFeatureVector("", buffer));
+            } catch (...) {
+                allFeatures.emplace_back();
             }
-            
-            int finalClass = 0;
-            int gender = 0;
-            int age = 0;
-            
-            if (mode == "combined") {
-                // Make gender prediction (0=female, 1=male)
-                Eigen::VectorXi genderPrediction;
-                genderClassifier->predict(X, genderPrediction);
-                gender = genderPrediction(0);
-                
-                // Make age prediction (0=thirties, 1=fifties)
-                Eigen::VectorXi agePrediction;
-                ageClassifier->predict(X, agePrediction);
-                age = agePrediction(0);
-                
-                // Combine predictions to get final class (0-3)
-                // 0: Female + Thirties
-                // 1: Female + Fifties
-                // 2: Male + Thirties
-                // 3: Male + Fifties
-                finalClass = gender * 2 + age;
-            } else {
-                // Use single model for direct prediction
-                Eigen::VectorXi prediction;
-                classifier->predict(X, prediction);
-                finalClass = prediction(0);
-            }
-            
-            // Write prediction to results file
-            resultsFile << finalClass << std::endl;
-            
-            // Evaluate accuracy if ground truth is available
-            if (evaluateAccuracy && groundTruth.find(file) != groundTruth.end()) {
-                int trueClass = groundTruth[file];
-                bool correct = (finalClass == trueClass);
-                
-                if (correct) {
-                    correctPredictions++;
-                }
-                totalPredictions++;
-                
-                // Write detailed prediction information
-                if (mode == "combined") {
-                    accuracyFile << file << "\t" 
-                                << "True: " << trueClass << "\t"
-                                << "Pred: " << finalClass << "\t"
-                                << "Gender: " << gender << "\t"
-                                << "Age: " << age << "\t"
-                                << (correct ? "Correct" : "Wrong") << std::endl;
-                } else {
-                    accuracyFile << file << "\t" 
-                                << "True: " << trueClass << "\t"
-                                << "Pred: " << finalClass << "\t"
-                                << (correct ? "Correct" : "Wrong") << std::endl;
-                }
-            }
+            progressBar.update();
         }
-        catch (const std::exception& e) {
-            std::cerr << "Error processing file " << file << ": " << e.what() << std::endl;
-            // Output default prediction if processing fails
-            resultsFile << "0" << std::endl;
+        progressBar.finish();
+        return allFeatures;
+    }
+
+    std::vector<int> predict(const std::vector<std::vector<float>>& features) {
+        logger.log("\n🔮 Making predictions...", COLOR::GREEN);
+        int M = features.size();
+        Eigen::MatrixXd X(M, features[0].size());
+        for (int i = 0; i < M; ++i)
+            for (int j = 0; j < (int)features[i].size(); ++j)
+                X(i, j) = features[i][j];
+
+        std::vector<int> finalClasses(M);
+        if (config.mode == "combined") {
+            Eigen::VectorXi gPred(M), aPred(M);
+            genderClassifier->predict(X, gPred);
+            ageClassifier->predict(X, aPred);
+            for (int i = 0; i < M; ++i)
+                finalClasses[i] = aPred(i)*2 + gPred(i);
+        } else {
+            Eigen::VectorXi pred(M);
+            classifier->predict(X, pred);
+            for (int i = 0; i < M; ++i)
+                finalClasses[i] = pred(i);
+        }
+        return finalClasses;
+    }
+
+    void writeOutputs(const std::vector<int>& preds, const std::vector<std::string>& files) {
+        std::ofstream resF("results.txt"), timeF("time.txt");
+        for (int cls : preds) resF << cls << "\n";
+        auto duration = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - startTime);
+        timeF << duration.count();
+
+        if (fs::exists(config.groundTruthPath)) {
+            auto truth = parseGroundTruth(config.groundTruthPath);
+            std::ofstream accF("accuracy.txt");
+            int correct = 0;
+            for (size_t i = 0; i < files.size(); ++i) {
+                auto it = truth.find(files[i]);
+                if (it != truth.end() && it->second == preds[i]) ++correct;
+                accF << files[i] << "\tTrue:" << (it!=truth.end()?it->second: -1)
+                     << "\tPred:" << preds[i]
+                     << "\t" << ((it!=truth.end() && it->second==preds[i])?"Correct":"Wrong")
+                     << "\n";
+            }
+            logger.log("Accuracy: " + std::to_string(100.0*correct/files.size()) + "%", COLOR::GREEN);
         }
     }
-    
-    // Calculate total processing time
-    auto endTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsedSeconds = endTime - startTime;
-    
-    // Write only the time value to time.txt
-    timeFile << elapsedSeconds.count();
-    
-    // Write accuracy information if evaluated
-    if (evaluateAccuracy && totalPredictions > 0) {
-        double accuracy = static_cast<double>(correctPredictions) / totalPredictions;
-        std::cout << "Accuracy: " << (accuracy * 100.0) << "% (" 
-                 << correctPredictions << "/" << totalPredictions << ")" << std::endl;
+
+    void startTimer() { startTime = std::chrono::high_resolution_clock::now(); }
+
+    void logElapsedTime() const {
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Inference completed in " << dur.count() << " ms\n";
+    }
+
+    std::unique_ptr<StackingClassifier> loadModel(const std::string& dir, const std::string& prefix) const {
+        auto clf = loadModelFromFile(dir, prefix);
+        if (!clf) std::cerr << "Failed to load model: " << dir << "/" << prefix << std::endl;
+        return clf;
+    }
+
+    std::unordered_map<std::string, int> parseGroundTruth(const std::string& tsvPath) {
+        std::unordered_map<std::string, int> groundTruth;
+        std::ifstream file(tsvPath);
         
-        accuracyFile << "Overall accuracy: " << (accuracy * 100.0) << "% (" 
-                     << correctPredictions << "/" << totalPredictions << ")" << std::endl;
+        if (!file.is_open()) {
+            std::cerr << "Warning: Could not open ground truth file: " << tsvPath << std::endl;
+            return groundTruth;
+        }
+        
+        std::string line;
+        std::getline(file, line);
+        while (std::getline(file, line)) {
+            size_t start = 0, end;
+            std::string filename, ageStr, genderStr;
+            
+            for (int col = 0; col <= 6; ++col) {
+                end = line.find('\t', start);
+                std::string token = (end == std::string::npos)
+                                  ? line.substr(start)
+                                  : line.substr(start, end - start);
+                
+                if (col == 1) filename  = token;
+                else if (col == 5) ageStr   = token;
+                else if (col == 6) genderStr = token;
+        
+                if (end == std::string::npos) break;
+                start = end + 1;
+            }
+            // Combine predictions to get final class (0-3)
+                // 0: Male + Twenties
+                // 1: Female + Twenties
+                // 2: Male + Fifties
+                // 3: Female + Fifties
+            int ageCode    = (ageStr    == "twenties") ? 0 : 1;
+            int genderCode = (genderStr == "male")    ? 0 : 1;
+    
+            groundTruth[filename] = ageCode * 2 + genderCode;
+        }
+        
+        return groundTruth;
     }
-    
-    // Close files
-    resultsFile.close();
-    timeFile.close();
-    if (evaluateAccuracy) {
-        accuracyFile.close();
-    }
-    
-    std::cout << "Inference completed in " << elapsedSeconds.count() << " seconds" << std::endl;
-    
-    return 0;
+};
+
+int main(int argc, char* argv[]) {
+    Inference engine(argc, argv);
+    if (!engine.initialize()) return 1;
+    return engine.run();
 }

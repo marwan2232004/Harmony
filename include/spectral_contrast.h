@@ -15,5 +15,6 @@ std::vector<float> extractSpectralContrastFeatures(
     float staticDistribution,
     essentia::standard::AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<essentia::Real> inputAudio,
     bool appendToFeatureVector
 );
