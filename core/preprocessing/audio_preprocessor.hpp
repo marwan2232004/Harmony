@@ -18,7 +18,7 @@ public:
     ~AudioPreprocessor();
     
     // Process a single file
-    bool processFile(const std::string& inputPath, const std::string& outputPath, float& duration);
+    bool processFile(const std::string& inputPath, const std::string& outputPath, float& duration, essentia::standard::AlgorithmFactory& factory, std::vector<essentia::Real>& result, bool saveFile = true);
     
     // Process a batch of files
     int processBatch(
@@ -63,5 +63,5 @@ private:
     
     // Utility methods
     float calculateRMS(const std::vector<essentia::Real>& buffer);
-    bool writeAudioFile(const std::vector<essentia::Real>& buffer, int& sampleRate, const std::string& filePath);
+    bool writeAudioFile(const std::vector<essentia::Real>& buffer, int& sampleRate, const std::string& filePath, essentia::standard::AlgorithmFactory& factory);
 };

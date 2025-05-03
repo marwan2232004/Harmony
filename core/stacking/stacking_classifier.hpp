@@ -30,7 +30,23 @@ struct BaseEstimator
      * @param X Test data (n_samples x n_features)
      * @param y_pred Output predicted labels (n_samples)
      */
-	virtual void predict(const MatrixXd &X, VectorXi &y_pred) const = 0;
+	virtual void predict(const MatrixXd &X, VectorXi &y_pred) = 0;
+
+	/**
+     * @brief Saves the model to a file
+     * @param filepath Path where to save the model
+     * @return true if successful, false otherwise
+     */
+    virtual bool save(const std::string &filepath) const = 0;
+    
+    /**
+     * @brief Loads the model from a file
+     * @param filepath Path from where to load the model
+     * @return true if successful, false otherwise
+     */
+    virtual bool load(const std::string &filepath) = 0;
+	
+	
 };
 
 /**
@@ -73,4 +89,18 @@ public:
      * @throws std::runtime_error if model hasn't been trained
      */
 	void predict(const MatrixXd &X, VectorXi &out) const;
+
+	/**
+	 * @brief Saves all models (base models and meta model) to separate files
+	 * @param directory Directory where to save the models
+	 * @return true if all models were saved successfully, false otherwise
+	 */
+	bool saveModels(const std::string &directory) const;
+
+	/**
+	 * @brief Loads all models from files
+	 * @param directory Directory where models were saved
+	 * @return true if all models were loaded successfully, false otherwise
+	 */
+	bool loadModels(const std::string &directory);
 };

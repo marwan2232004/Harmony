@@ -9,4 +9,4 @@
 using namespace essentia;
 using namespace standard;
 
-std::vector<float> getFeatureVector(std::string path);
+std::vector<float> getFeatureVector(std::string path, std::vector<essentia::Real> inputAudio = std::vector<essentia::Real>());

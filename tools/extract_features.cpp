@@ -11,6 +11,7 @@
 #include <utility>
 #include <chrono>
 #include <iomanip>
+#include <omp.h>
 #include "../tools/tqdm.cpp"
 
 namespace fs = std::filesystem;
@@ -44,12 +45,12 @@ std::vector<std::string> getFeatureNames() {
     std::vector<std::string> featureNames;
     
     // MFCC features (13 coefficients + 13 stddev)
-    for (int i = 1; i <= 13; i++) {
-        featureNames.push_back("mfcc_mean_" + std::to_string(i));
-    }
-    for (int i = 1; i <= 13; i++) {
-        featureNames.push_back("mfcc_std_" + std::to_string(i));
-    }
+    // for (int i = 1; i <= 26; i++) {
+    //     featureNames.push_back("mfcc_mean_" + std::to_string(i));
+    // }
+    // for (int i = 1; i <= 26; i++) {
+    //     featureNames.push_back("mfcc_std_" + std::to_string(i));
+    // }
     
     // // Chroma features (36 bins + 36 stddev)
     // for (int i = 1; i <= 36; i++) {
@@ -79,13 +80,13 @@ std::vector<std::string> getFeatureNames() {
     // }
     // featureNames.push_back("tonnetz_key_strength");
     
-    // // Mel Spectrogram features (40 bands + 40 stddev)
-    // for (int i = 1; i <= 40; i++) {
-    //     featureNames.push_back("mel_mean_" + std::to_string(i));
-    // }
-    // for (int i = 1; i <= 40; i++) {
-    //     featureNames.push_back("mel_std_" + std::to_string(i));
-    // }
+    // Mel Spectrogram features (40 bands + 40 stddev)
+    for (int i = 1; i <= 40; i++) {
+        featureNames.push_back("mel_mean_" + std::to_string(i));
+    }
+    for (int i = 1; i <= 40; i++) {
+        featureNames.push_back("mel_std_" + std::to_string(i));
+    }
     
     return featureNames;
 }
