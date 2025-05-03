@@ -24,7 +24,7 @@ message(STATUS "LAPACK libraries: ${LAPACK_LIBRARIES}")
 set(MATH_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # ────────────────────────────────────────────────────────────────────────────────
-# Find external libraries: Essentia, Dlib, Shark
+# Find external libraries: Essentia, Dlib, Armadillo, MLPACK, Boost, OpenMP
 # ────────────────────────────────────────────────────────────────────────────────
 find_library(ESSENTIA_LIB essentia)
 find_path(ESSENTIA_INCLUDE essentia/essentia.h)
@@ -37,24 +37,6 @@ set(MLPACK_INCLUDE_DIR "/usr/local/include")
 
 find_package(Boost REQUIRED COMPONENTS serialization system)
 find_package(OpenMP REQUIRED)
-
-find_path( SHARK_INCLUDE_DIR
-  NAMES shark/Data/Dataset.h
-  HINTS /usr/local/include
-)
-
-find_library( SHARK_LIBRARY
-  NAMES shark
-  HINTS /usr/local/lib /usr/lib
-)
-
-if( NOT SHARK_INCLUDE_DIR )
-    message(FATAL_ERROR "Could not find Shark headers (Data/Dataset.h) inside /usr/local/include/shark")
-endif()
-
-if( NOT SHARK_LIBRARY )
-    message(FATAL_ERROR "Could not find Shark library (libshark.so) inside /usr/local/lib")
-endif()
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Collect all source files
@@ -199,7 +181,6 @@ target_include_directories(stacking PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
-    ${SHARK_INCLUDE_DIR}
     ${OpenMP_CXX_INCLUDE_DIRS}
     ${MLPACK_INCLUDE_DIR}
     ${Armadillo_INCLUDE_DIRS}
@@ -223,7 +204,6 @@ target_link_libraries(stacking
     OpenMP::OpenMP_CXX
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
-    ${SHARK_LIBRARY}
     ${Boost_LIBRARIES} 
     stdc++fs
     # The ordering of these libraries is critical for resolving dependencies
@@ -263,7 +243,6 @@ target_include_directories(inference PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
     ${dlib_INCLUDE_DIRS}
-    ${SHARK_INCLUDE_DIR}
     ${OpenMP_CXX_INCLUDE_DIRS}
     ${MLPACK_INCLUDE_DIR}
     ${Armadillo_INCLUDE_DIRS}
@@ -274,7 +253,6 @@ target_link_libraries(inference
     OpenMP::OpenMP_CXX
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
-    ${SHARK_LIBRARY}
     ${Boost_LIBRARIES} 
     stdc++fs
     # The ordering of these libraries is critical for resolving dependencies

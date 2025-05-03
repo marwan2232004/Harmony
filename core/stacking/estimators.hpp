@@ -8,16 +8,6 @@
 #include <dlib/statistics.h>
 #include <dlib/matrix.h>
 #include <dlib/serialize.h>
-#include <shark/ObjectiveFunctions/Loss/ZeroOneLoss.h>
-#include <shark/Models/LinearModel.h>
-#include <shark/Models/Kernels/GaussianRbfKernel.h>
-#include <shark/Algorithms/Trainers/NormalizeComponentsUnitVariance.h>
-#include <shark/Algorithms/Trainers/CSvmTrainer.h>
-#include <shark/Algorithms/Trainers/LogisticRegression.h>
-#include <shark/Algorithms/Trainers/RFTrainer.h>
-#include <shark/Algorithms/NearestNeighbors/TreeNearestNeighbors.h>
-#include <shark/ObjectiveFunctions/Loss/ZeroOneLoss.h>
-#include <shark/Data/Csv.h>
 #include <eigen3/Eigen/Dense>
 #include "stacking_classifier.hpp"
 #include <cereal/archives/binary.hpp>
@@ -57,19 +47,6 @@ inline Eigen::VectorXd from_dlib_vec(const dlib::matrix<double, 0, 1> &m)
 	for (int i = 0; i < m.size(); ++i)
 		v[i] = m(i);
 	return v;
-}
-
-/**
- * @brief Converts Eigen::VectorXd to shark::RealVector
- * @param v Eigen vector to convert
- * @return shark::RealVector converted vector
- */
-inline shark::RealVector to_shark_vec(const Eigen::VectorXd& v) {
-    shark::RealVector vec(v.size());
-    for(int i = 0; i < v.size(); ++i) {
-        vec(i) = v(i);
-    }
-    return vec;
 }
 
 namespace harmony
@@ -131,7 +108,7 @@ namespace harmony
 	};
 
 	/**
-	 * @brief Extra-Trees classifier implementation using Shark
+	 * @brief Extra-Trees classifier implementation using mlpack
 	 * Note: Extremely Randomized Trees variant
 	 */
 	struct ExtraTrees : BaseEstimator
@@ -180,7 +157,7 @@ namespace harmony
 	};
 
 	/**
-	 * @brief Random Forest classifier implementation using Shark
+	 * @brief Random Forest classifier implementation using mlpack
 	 * Implements standard Random Forest (not Extra-Trees)
 	 */
 	struct RandomForest : BaseEstimator
@@ -229,7 +206,7 @@ namespace harmony
 	};
 
 	/**
-	 * @brief K-Nearest Neighbors classifier implementation using Shark
+	 * @brief K-Nearest Neighbors classifier implementation using mlpack
 	 * Implements standard KNN algorithm
 	 */
 	struct KNN : BaseEstimator
@@ -276,7 +253,7 @@ namespace harmony
 	};
 
 	/**
-	 * @brief Logistic Regression classifier implementation using Shark
+	 * @brief Logistic Regression classifier implementation using mlpack
 	 * Implements standard Logistic Regression
 	 */
 	struct LR : BaseEstimator
