@@ -15,5 +15,6 @@ std::vector<float> extractChromaFeatures(
     const std::string& windowType,
     essentia::standard::AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<essentia::Real> inputAudio,
     bool appendToFeatureVector
 );

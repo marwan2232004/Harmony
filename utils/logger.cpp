@@ -16,6 +16,11 @@
 #include <windows.h>
 #endif
 
+namespace fs = std::filesystem;
+
+namespace harmony
+{
+
 const std::string Logger::COLOR::RESET = "\033[0m";
 const std::string Logger::COLOR::RED = "\033[31m";
 const std::string Logger::COLOR::GREEN = "\033[32m";
@@ -61,18 +66,32 @@ void Logger::initialize(const std::string& appName, const Config& config) {
     }
 }
 
-void Logger::log(const std::string& message, Level level = Level::INFO, bool logToFile = true) {
+void Logger::log(const std::string& message, Level level, bool logToFile) {
     std::lock_guard<std::mutex> lock(logMutex);
     std::string formatted = formatLog(message, level);
     
     if(config.coloredOutput) {
         std::cout << levelColor(level) << formatted << COLOR::RESET << std::endl;
     } else {
-        std::cout << formatted << std::endl;
+        std::cout << message << std::endl;
     }
 
-    if(config.enableFileLogging && logFile.is_open()) {
+    if(config.enableFileLogging && logToFile && logFile.is_open()) {
         logFile << stripColors(formatted) << std::endl;
+    }
+}
+
+void Logger::log(const std::string& message, std::string color, bool logToFile) {
+    std::lock_guard<std::mutex> lock(logMutex);
+    
+    if(config.coloredOutput) {
+        std::cout << color << message << COLOR::RESET << std::endl;
+    } else {
+        std::cout << message << std::endl;
+    }
+
+    if(config.enableFileLogging && logToFile && logFile.is_open()) {
+        logFile << stripColors(message) << std::endl;
     }
 }
 
@@ -90,4 +109,6 @@ void Logger::logConfig(const std::string& name, const T& value) {
     std::stringstream ss;
     ss << "Configuration: " << name << " = " << value;
     log(ss.str(), Level::INFO);
+}
+
 }

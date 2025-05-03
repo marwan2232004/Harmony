@@ -60,7 +60,7 @@ namespace harmony
 	{
 		using sample_type = dlib::matrix<double, 0, 1>;
 		using kernel_type = dlib::radial_basis_kernel<sample_type>;
-		using ovo_trainer_type = dlib::one_vs_all_trainer<dlib::any_trainer<sample_type>, int>;;
+		using ovo_trainer_type = dlib::one_vs_one_trainer<dlib::any_trainer<sample_type>, int>;;
 		using df_type = typename ovo_trainer_type::trained_function_type;
 		
 		// trainers

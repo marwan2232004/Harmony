@@ -33,12 +33,14 @@ bool AudioPreprocessor::processFile(const std::string &inputPath, const std::str
         return false;
     }
 
-    Algorithm *resampler = nullptr;
+    std::unique_ptr<Algorithm> resampler;
 
     try
     {
         int sampleRate = 0;
         std::vector<Real> audioBuffer = AudioUtil::readAudioFile(inputPath, duration, sampleRate);
+        result = audioBuffer;
+        return true;
 
         if (audioBuffer.empty())
         {
@@ -50,10 +52,11 @@ bool AudioPreprocessor::processFile(const std::string &inputPath, const std::str
         if (sampleRate != targetSampleRate)
         {
 
-            resampler = factory.create("Resample",
-                                        "inputSampleRate", sampleRate,
-                                        "outputSampleRate", targetSampleRate,
-                                        "quality", 1); // 1 is high quality
+            Algorithm *ptr = factory.create("Resample",
+                                                    "inputSampleRate", sampleRate,
+                                                    "outputSampleRate", targetSampleRate,
+                                                    "quality", 1); // 1 is high quality
+            resampler = std::unique_ptr<Algorithm>(ptr);
 
             std::vector<Real> resampledBuffer;
             resampler->input("signal").set(audioBuffer);
@@ -64,7 +67,7 @@ bool AudioPreprocessor::processFile(const std::string &inputPath, const std::str
             audioBuffer = resampledBuffer;
             sampleRate = targetSampleRate;
 
-            delete resampler;
+            resampler.reset();
         }
 
         // Apply processing steps according to enabled flags
@@ -114,10 +117,7 @@ bool AudioPreprocessor::processFile(const std::string &inputPath, const std::str
     }
     catch (const std::exception &e)
     {
-        if (resampler)
-        {
-            delete resampler;
-        }
+        resampler.reset();
         std::cerr << "Error processing file " << inputPath << ": " << e.what() << '\n';
         return false;
     }
@@ -298,7 +298,7 @@ void AudioPreprocessor::trimAudio(std::vector<essentia::Real> &audioBuffer, int 
     }
     else if (int(audioBuffer.size()) < targetSamples)
     {
-        audioBuffer.clear();
+        audioBuffer.resize(targetSamples, 0.0f);
     }
 }
 

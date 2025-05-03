@@ -13,6 +13,9 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
+namespace harmony
+{
+
 class Logger {
 public:
     // Store colors in struct for global access
@@ -80,6 +83,15 @@ public:
     void log(const std::string& message, Level level = Level::INFO, bool logToFile = true);
 
     /**
+     * @brief Log a message with a specific color.
+     * 
+     * @param message The message to log.
+     * @param color The color to use for the message.
+     * @param logToFile Whether to log to file (default: true).
+     */
+    void log(const std::string& message, std::string color = COLOR::RESET, bool logToFile = true);
+
+    /**
      * @brief Log a message with a specific log level and color.
      * 
      * @param message The message to log.
@@ -98,13 +110,18 @@ public:
 
     // Progress bar class
     class ProgressBar {
+        int current = 0;
+        std::string color;
     public:
-        ProgressBar(int total, const std::string& description = "")
+        ProgressBar(int total, const std::string& description = "", std::string color = COLOR::RESET)
             : total(total), description(description), startTime(std::chrono::steady_clock::now()) {
+            this->current = 0;
+            this->color = color;
             update(0);
         }
 
-        void update(int current) {
+        void update(int current = -1) {
+            if(current < 0) current = this->current;
             std::lock_guard<std::mutex> lock(Logger::getInstance().logMutex);
             float progress = static_cast<float>(current) / total;
             int barWidth = 50;
@@ -129,11 +146,12 @@ public:
             ss << " (" << current << "/" << total << ")";
             
             if(Logger::getInstance().config.coloredOutput) {
-                std::cout << COLOR::CYAN << ss.str() << COLOR::RESET;
+                std::cout << this->color << ss.str() << COLOR::RESET;
             } else {
                 std::cout << ss.str();
             }
             std::cout.flush();
+            this->current++;
         }
 
         void finish() {
@@ -229,3 +247,5 @@ private:
         return result;
     }
 };
+
+}

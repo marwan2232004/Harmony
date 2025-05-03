@@ -17,5 +17,6 @@ std::vector<float> extractMelSpectrogramFeatures(
     const std::string& type,
     essentia::standard::AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<essentia::Real> inputAudio,
     bool appendToFeatureVector
 );

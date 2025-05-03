@@ -205,12 +205,6 @@ int main(int argc, char* argv[]) {
         
         auto batchStart = std::chrono::high_resolution_clock::now();
         
-        auto featureNames = getFeatureNames();
-        for (const auto& name : featureNames) {
-            out << name << "\t";
-        }
-        out << "age\tgender\n";
-
         Tqdm tqdm(totalFiles, "🚀 Processing " + filename + " (" + std::to_string(totalFiles) + " files)");
 
         for (size_t i = 0; i < batch.size(); ++i) {
@@ -235,7 +229,6 @@ int main(int argc, char* argv[]) {
     
             tqdm.update();
         }
-    
         tqdm.finish();
 
         auto batchEnd = std::chrono::high_resolution_clock::now();
