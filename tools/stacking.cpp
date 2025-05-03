@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
     // Initialize models
     printColored("⚡ Initializing models...", COLOR_GREEN);
     std::vector<std::unique_ptr<BaseEstimator>> base_models;
-    base_models.push_back(std::make_unique<harmony::SVM>(svm_c, svm_gamma));
+    base_models.push_back(std::make_unique<harmony::SVM_ML>(svm_c, svm_gamma));
     // base_models.push_back(std::make_unique<harmony::ExtraTrees>(400, 5, nClasses));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, nClasses));
     // base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));

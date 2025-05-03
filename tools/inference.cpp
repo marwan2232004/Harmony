@@ -76,7 +76,7 @@ std::vector<float> extractFeatures(const std::string& audioFile) {
     using namespace essentia;
     using namespace essentia::standard;
 
-    AudioPreprocessor* audioProcessor = new AudioPreprocessor();
+    AudioPreprocessor* audioProcessor = new AudioPreprocessor(4);
     std::vector<essentia::Real> audioBuffer;
     float duration = 0.0f;
     AlgorithmFactory& factory = AlgorithmFactory::instance();
@@ -160,10 +160,10 @@ std::unique_ptr<StackingClassifier> loadModel(const std::string& modelDir, const
 
     // Create base models matching training configuration
     std::vector<std::unique_ptr<BaseEstimator>> base_models;
-    base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
+    // base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
     
     // Uncomment these when needed and properly implemented
-    // base_models.push_back(std::make_unique<harmony::SVM>(svm_c, svm_gamma));
+    base_models.push_back(std::make_unique<harmony::SVM_ML>(svm_c, svm_gamma));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, n_classes));
     // base_models.push_back(std::make_unique<harmony::NeuralNet>(nn_hidden1, nn_hidden2, n_classes));
     
@@ -200,13 +200,21 @@ std::map<std::string, int> parseGroundTruth(const std::string& tsvPath) {
         int label = -1;
         
         // Parse TSV line
+        // input format:  client_id	path	sentence	up_votes	down_votes	age	gender	accent	label
         if (std::getline(ss, filename, '\t') && std::getline(ss, item, '\t')) {
-            try {
-                label = std::stoi(item);
-                groundTruth[filename] = label;
-            } catch (const std::exception& e) {
-                std::cerr << "Error parsing line: " << line << std::endl;
+            std::string sentence, upVotes, downVotes, ageStr, genderStr, accent, labelStr;
+            if (!(std::getline(ss, sentence, '\t') &&
+                std::getline(ss, upVotes, '\t') &&
+                std::getline(ss, downVotes, '\t') &&
+                std::getline(ss, ageStr, '\t') &&
+                std::getline(ss, genderStr, '\t') &&
+                std::getline(ss, accent, '\t') &&
+                std::getline(ss, labelStr, '\t'))) {
+                continue;
             }
+            int gender = (genderStr == "male") ? 1 : 0;
+            int age = (ageStr == "fifties") ? 1 : 0;
+            groundTruth[filename] = gender * 2 + age;
         }
     }
     
@@ -231,21 +239,19 @@ int main(int argc, char* argv[]) {
     auto args = parseArgs(argc, argv);
     
     // Check required arguments
-    if (args.count("data-dir") == 0 || args.count("model-dir") == 0) {
-        printUsage(argv[0]);
-        return 1;
-    }
+    // if (args.count("data-dir") == 0 || args.count("model-dir") == 0) {
+    //     printUsage(argv[0]);
+    //     return 1;
+    // }
     
     // Get argument values with defaults
-    std::string dataDir = args["data-dir"];
-    std::string modelDir = args["model-dir"];
-    std::string groundTruthPath = args.count("ground-truth") ? args["ground-truth"] : "";
-    std::string mode = args.count("mode") ? args["mode"] : "single";
+    std::string dataDir = "data/test";
+    std::string modelDir = "models/both";
+    std::string groundTruthPath = "data/datasets/filtered_data_labeled.tsv";
+    std::string mode =  "single";
     std::string genderPrefix = args.count("gender-prefix") ? args["gender-prefix"] : "gender";
     std::string agePrefix = args.count("age-prefix") ? args["age-prefix"] : "age";
     
-    // Initialize Essentia
-    essentia::init();
     
     // Verify directories exist
     if (!fs::exists(dataDir) || !fs::is_directory(dataDir)) {
@@ -306,7 +312,7 @@ int main(int argc, char* argv[]) {
         }
     } else {
         // Single model mode
-        std::cout << "Loading combined model from " << modelDir << std::endl;
+        std::cout << "Loading Single model from " << modelDir << std::endl;
         classifier = loadModel(modelDir, "");
         if (!classifier) {
             std::cerr << "Error: Failed to load model" << std::endl;
@@ -449,9 +455,6 @@ int main(int argc, char* argv[]) {
     }
     
     std::cout << "Inference completed in " << elapsedSeconds.count() << " seconds" << std::endl;
-    
-    // Shutdown Essentia
-    essentia::shutdown();
     
     return 0;
 }
