@@ -1,6 +1,6 @@
 #include "feature_extractor.h"
 
-std::vector<float> getFeatureVector(std::string path) {
+std::vector<float> getFeatureVector(std::string path, std::vector<Real> inputAudio) {
     int sampleRate = 16000;
 
     AlgorithmFactory& factory = AlgorithmFactory::instance();
@@ -8,7 +8,7 @@ std::vector<float> getFeatureVector(std::string path) {
     std::vector<float> featureVector;
     
     std::vector<float> MFCCfeatures = extractMFCCFeatures(
-        path, sampleRate, 400, 160, 26, 13, 0, 8000, 22, 2, "dbamp", factory, featureVector, true
+        path, sampleRate, 400, 160, 26, 26, 0, 8000, 22, 2, "dbamp", factory, featureVector, inputAudio,true
     );
 
     // std::vector<float> ChromaFeatures = extractChromaFeatures(
@@ -23,9 +23,9 @@ std::vector<float> getFeatureVector(std::string path) {
     //     path, sampleRate, factory, featureVector, true
     // );
 
-    // std::vector<float> MelSpectrogramFeatures = extractMelSpectrogramFeatures(
-    //     path, sampleRate, 2048, 1024, 40, 20, 8000, "htkMel", "linear", "unit_sum", "power", factory, featureVector, true
-    // );
+    std::vector<float> MelSpectrogramFeatures = extractMelSpectrogramFeatures(
+        path, sampleRate, 2048, 1024, 40, 20, 8000, "htkMel", "linear", "unit_sum", "power", factory, featureVector, true
+    );
 
     return featureVector;
 }

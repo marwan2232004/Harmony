@@ -11,14 +11,15 @@ std::vector<essentia::Real> AudioUtil::readAudioFile(const std::string& audioFil
     if (!fs::exists(audioFilePath)) {
         throw std::runtime_error("Audio file does not exist: " + audioFilePath);
     }
-    
+    Algorithm* audioLoader = nullptr;
     try {
         // Get algorithm factory
         AlgorithmFactory& factory = AlgorithmFactory::instance();
 
         // Create audio loader (automatically converts to mono)
-        Algorithm* audioLoader = factory.create("MonoLoader",
-                                              "filename",  audioFilePath);
+        audioLoader = factory.create("MonoLoader",
+                                    "filename", 
+                                    audioFilePath);
         
         // Buffer for audio data
         std::vector<Real> audioBuffer;
@@ -42,6 +43,9 @@ std::vector<essentia::Real> AudioUtil::readAudioFile(const std::string& audioFil
     catch (const std::exception& e) {
         sampleRate = 0;
         duration = -1.0f;
+        if(audioLoader) {
+            delete audioLoader;
+        }
         return std::vector<Real>(); 
     }
 }

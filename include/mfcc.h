@@ -17,5 +17,6 @@ std::vector<float> extractMFCCFeatures(
     const std::string& logType,
     essentia::standard::AlgorithmFactory& factory,
     std::vector<float>& featureVector,
+    std::vector<essentia::Real> inputAudio,
     bool appendToFeatureVector
 );

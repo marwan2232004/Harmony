@@ -1,5 +1,8 @@
 #include <iostream>
 #include "stacking_classifier.hpp"
+#include <filesystem>
+#include <fstream>
+
 
 StackingClassifier::StackingClassifier(
     std::vector<std::unique_ptr<BaseEstimator>> bases,
@@ -92,4 +95,73 @@ void StackingClassifier::predict(const MatrixXd& X, VectorXi& out) const
 	}
 	// final
 	meta_->predict(Ztest, out);
+}
+
+bool StackingClassifier::saveModels(const std::string &directory) const {
+    // Create directory if it doesn't exist
+    if (!std::filesystem::exists(directory)) {
+        std::filesystem::create_directories(directory);
+    }
+    
+    bool success = true;
+    
+    // Save base models with appropriate extensions
+    for (int i = 0; i < L_; ++i) {
+        success &= bases_[i]->save(directory);
+    }
+    
+    // Save meta model (likely a Logistic Regression model using MLpack)
+    success &= meta_->save(directory);
+    
+    // Save configuration
+    std::ofstream config(directory + "/config.txt");
+    if (config.is_open()) {
+        config << "num_base_models=" << L_ << std::endl;
+        config << "num_folds=" << K_ << std::endl;
+        config << "fitted=" << (fitted_ ? "true" : "false") << std::endl;
+        config.close();
+    } else {
+        success = false;
+    }
+    
+    return success;
+}
+
+bool StackingClassifier::loadModels(const std::string &directory) {
+    if (!std::filesystem::exists(directory)) {
+        std::cerr << "Directory does not exist: " << directory << std::endl;
+        return false;
+    }
+    
+    // Load configuration
+    std::ifstream config(directory + "/config.txt");
+    if (config.is_open()) {
+        std::string line;
+        while (std::getline(config, line)) {
+            if (line.find("num_base_models=") == 0) {
+                L_ = std::stoi(line.substr(16));
+            } else if (line.find("num_folds=") == 0) {
+                K_ = std::stoi(line.substr(10));
+            } else if (line.find("fitted=") == 0) {
+                fitted_ = (line.substr(7) == "true");
+            }
+        }
+        config.close();
+    } else {
+        std::cerr << "Failed to open config file" << std::endl;
+        return false;
+    }
+    
+    // Load base models
+    for (int i = 0; i < L_; ++i) {
+        if (!bases_[i]->load(directory)) {
+            std::cerr << "Failed to load base model " << i << std::endl;
+            return false;
+        }
+    }
+    // Load meta model
+    if (!meta_->load(directory)) {
+        std::cerr << "Failed to load meta model" << std::endl;
+        return false;
+    }
 }

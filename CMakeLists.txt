@@ -71,7 +71,7 @@ file(GLOB PREPROCESSOR "core/preprocessing/*.cpp")
 file(GLOB TOOLS_ALL "tools/*.cpp")
 set(TOOLS "")
 foreach(TOOL_FILE ${TOOLS_ALL})
-    if(NOT ${TOOL_FILE} MATCHES "clean_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "process_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "extract_features.cpp" AND NOT ${TOOL_FILE} MATCHES "stacking.cpp")
+    if(NOT ${TOOL_FILE} MATCHES "clean_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "process_dataset.cpp" AND NOT ${TOOL_FILE} MATCHES "extract_features.cpp" AND NOT ${TOOL_FILE} MATCHES "stacking.cpp" AND NOT ${TOOL_FILE} MATCHES "inference.cpp")
         list(APPEND TOOLS ${TOOL_FILE})
     endif()
 endforeach()
@@ -87,51 +87,6 @@ file(GLOB HEADERS_STACKING "core/stacking/*.hpp")
 # ────────────────────────────────────────────────────────────────────────────────
 # Main executable - WITHOUT clean_dataset.cpp
 # ────────────────────────────────────────────────────────────────────────────────
-add_executable(main 
-    ${SOURCES} 
-    ${EXTRACTORS}
-    ${STACKING}
-    ${MODELS} 
-    ${CLEANER} 
-    ${AUDIO} 
-    ${TOOLS}
-    ${HEADERS_INCLUDE}
-    ${HEADERS_AUDIO}
-    ${HEADERS_CLEANING}
-    ${HEADERS_TOOLS}
-)
-
-target_compile_options(main PRIVATE
-    ${OpenMP_CXX_FLAGS}
-)
-
-target_include_directories(main PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${ESSENTIA_INCLUDE}
-    ${dlib_INCLUDE_DIRS}
-    ${SHARK_INCLUDE_DIR}
-    ${OpenMP_CXX_INCLUDE_DIRS}
-    ${MLPACK_INCLUDE_DIR}
-    ${Armadillo_INCLUDE_DIRS}
-)
-
-target_link_libraries(main PRIVATE
-    ${ESSENTIA_LIB}
-    ${dlib_LIBRARIES}
-    ${SHARK_LIBRARY}
-    ${Boost_LIBRARIES}
-    stdc++fs  # Add filesystem library
-    # The ordering of these libraries is critical for resolving dependencies
-    ${Armadillo_LIBRARIES}
-    ${LAPACK_LIBRARIES}
-    ${BLAS_LIBRARIES}
-    ${OpenMP_CXX_LIBRARIES}
-    # Explicit linking as a fallback
-    -larmadillo
-    -llapack 
-    -lopenblas
-    -lblas
-)
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Add clean_dataset as a separate executable
@@ -173,18 +128,26 @@ add_executable(process_dataset
     ${HEADERS_TOOLS}
 )
 
+
+target_compile_options(process_dataset PRIVATE
+    ${OpenMP_CXX_FLAGS}
+)
+
 # Include directories for process_dataset
 target_include_directories(process_dataset PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ESSENTIA_INCLUDE}
+    ${OpenMP_CXX_INCLUDE_DIRS}
     ${dlib_INCLUDE_DIRS}
     ${MLPACK_INCLUDE_DIR}
 )
 
 # Link libraries for process_dataset
 target_link_libraries(process_dataset PRIVATE
+    OpenMP::OpenMP_CXX
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}
+    ${OpenMP_CXX_LIBRARIES}
     stdc++fs  # Add filesystem library
 )
 
@@ -257,6 +220,57 @@ endif()
 
 # Link libraries for stacking
 target_link_libraries(stacking
+    OpenMP::OpenMP_CXX
+    ${ESSENTIA_LIB}
+    ${dlib_LIBRARIES}
+    ${SHARK_LIBRARY}
+    ${Boost_LIBRARIES} 
+    stdc++fs
+    # The ordering of these libraries is critical for resolving dependencies
+    ${Armadillo_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    ${OpenMP_CXX_LIBRARIES}
+    # Explicit linking as a fallback
+    -larmadillo
+    -llapack 
+    -lopenblas
+    -lblas
+)
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Add inference as a separate executable
+# ────────────────────────────────────────────────────────────────────────────────
+add_executable(inference
+    tools/inference.cpp 
+    ${EXTRACTORS}
+    ${STACKING}
+    ${PREPROCESSOR}
+    ${MODELS}
+    ${TOOLS}
+    ${HEADERS_INCLUDE}
+    ${HEADERS_STACKING}
+    ${HEADERS_PREPROCESSOR} 
+    ${HEADERS_TOOLS}
+)
+
+target_compile_options(inference PRIVATE
+    ${OpenMP_CXX_FLAGS}
+)
+
+# Include directories for stacking
+target_include_directories(inference PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ESSENTIA_INCLUDE}
+    ${dlib_INCLUDE_DIRS}
+    ${SHARK_INCLUDE_DIR}
+    ${OpenMP_CXX_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
+    ${Armadillo_INCLUDE_DIRS}
+)
+
+# Link libraries for stacking
+target_link_libraries(inference
     OpenMP::OpenMP_CXX
     ${ESSENTIA_LIB}
     ${dlib_LIBRARIES}

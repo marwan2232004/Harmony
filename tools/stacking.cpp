@@ -7,6 +7,13 @@
 #include <vector>
 #include <iomanip>
 #include <filesystem>
+#include <map>
+#include <ctime>
+#include <boost/serialization/vector.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <mlpack/core/data/save.hpp>
+#include <mlpack/core/data/load.hpp>
 #include "../tools/tqdm.cpp"
 
 // Logging constants
@@ -14,6 +21,7 @@ const std::string COLOR_GREEN = "\033[32m";
 const std::string COLOR_CYAN = "\033[36m";
 const std::string COLOR_YELLOW = "\033[33m";
 const std::string COLOR_RESET = "\033[0m";
+const std::string COLOR_RED = "\033[31m";
 
 namespace fs = std::filesystem;
 
@@ -30,8 +38,10 @@ void printUsage(const char* programName) {
     std::cout << "  --svm-c=<value>          SVM C parameter (default: 1000)\n";
     std::cout << "  --svm-gamma=<value>      SVM gamma parameter (default: 0.0001)\n";
     std::cout << "  --rf-trees=<num>         Random Forest number of trees (default: 300)\n";
-    std::cout << "  --knn-k=<num>            KNN number of neighbors (default: 3)\n";
+    std::cout << "  --knn-k=<num>            KNN number of neighbors (default: 5)\n";
     std::cout << "  --knn-metric=<metric>    KNN distance metric (euclidean or manhattan, default: euclidean)\n";
+    std::cout << "  --nn-hidden1=<num>       Neural Network first hidden layer units (default: 64)\n";
+    std::cout << "  --nn-hidden2=<num>       Neural Network second hidden layer units (default: 32)\n";
     std::cout << "  --n-folds=<num>          Cross-validation folds (default: 5)\n";
     std::cout << "  --seed=<num>             Random seed (default: 42)\n";
     std::cout << "  --help                   Show this help message\n";
@@ -118,6 +128,14 @@ double calculateAccuracy(const Eigen::VectorXi& y_true, const Eigen::VectorXi& y
     return static_cast<double>(correct) / y_true.size() * 100.0;
 }
 
+// Function to ensure a directory exists
+void ensureDirectoryExists(const std::string& path) {
+    if (!fs::exists(path)) {
+        fs::create_directories(path);
+    }
+}
+
+
 int main(int argc, char* argv[]) {
     // Configuration
     std::string train_path = "data/features/train.tsv";
@@ -126,10 +144,12 @@ int main(int argc, char* argv[]) {
     int svm_c = 1000;
     double svm_gamma = 0.0001;
     int rf_trees = 700;
-    int knn_k = 3;
+    int knn_k = 5;
     std::string knn_metric = "euclidean";
     int n_folds = 5;
     unsigned seed = 42;
+    int nn_hidden1 = 64;
+    int nn_hidden2 = 32;
 
     // Parse command line arguments
     std::vector<std::string> args(argv + 1, argv + argc);
@@ -160,6 +180,10 @@ int main(int argc, char* argv[]) {
             n_folds = std::stoi(value);
         } else if (!(value = getParamValue(arg, "seed")).empty()) {
             seed = std::stoi(value);
+        } else if (!(value = getParamValue(arg, "nn-hidden1")).empty()) {
+            nn_hidden1 = std::stoi(value);
+        } else if (!(value = getParamValue(arg, "nn-hidden2")).empty()) {
+            nn_hidden2 = std::stoi(value);
         }
     }
 
@@ -177,6 +201,8 @@ int main(int argc, char* argv[]) {
     std::cout << "   - SVM with RBF Kernel (C=" << svm_c << ", gamma=" << svm_gamma << ")\n";
     std::cout << "   - Random Forest (" << rf_trees << " trees, min_leaf=5)\n";
     std::cout << "   - K-Nearest Neighbors (k=" << knn_k << ", metric=" << knn_metric << ")\n";
+    std::cout << "   - Extra Trees (400 trees, min_leaf=5)\n";
+    std::cout << "   - Neural Network (" << nn_hidden1 << ", " << nn_hidden2 << " hidden units)\n";
     std::cout << "▸ Meta Model: Logistic Regression\n";
     std::cout << "▸ Cross-Validation Folds: " << n_folds << "\n";
     std::cout << "▸ Random Seed: " << seed << "\n";
@@ -208,6 +234,7 @@ int main(int argc, char* argv[]) {
     // base_models.push_back(std::make_unique<harmony::ExtraTrees>(400, 5, nClasses));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, nClasses));
     // base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
+    // base_models.push_back(std::make_unique<harmony::NeuralNet>(nn_hidden1, nn_hidden2, nClasses));
     auto meta_model = std::make_unique<harmony::LR>(0.01, nClasses);
 
     // Create stacker
@@ -238,6 +265,7 @@ int main(int argc, char* argv[]) {
     // Final report
     auto train_duration = std::chrono::duration_cast<std::chrono::seconds>(train_end_time - train_start_time);
     auto total_duration = std::chrono::duration_cast<std::chrono::seconds>(total_end - train_start);
+
     
     std::cout << "\n" << std::string(60, '=') << "\n";
     printColored("🎉 Stacking Classifier Results", COLOR_CYAN);
@@ -247,5 +275,33 @@ int main(int argc, char* argv[]) {
               << std::fixed << std::setprecision(2) << accuracy << "%" << COLOR_RESET << "\n";
     std::cout << std::string(60, '=') << "\n\n";
 
+    // Save the trained models
+    std::string modelDir = "models/" + target + "_" + std::to_string(std::time(nullptr));
+    ensureDirectoryExists(modelDir);
+
+    printColored("💾 Saving models to " + modelDir + "...", COLOR_GREEN);
+    if (stacker.saveModels(modelDir)) {
+        printColored("✅ Models saved successfully!", COLOR_GREEN);
+        
+        // Save a summary file with model parameters and accuracy
+        std::ofstream summary(modelDir + "/summary.txt");
+        if (summary.is_open()) {
+            summary << "# Stacking Model Summary\n\n";
+            summary << "Target: " << target << "\n";
+            summary << "Accuracy: " << std::fixed << std::setprecision(2) << accuracy << "%\n\n";
+            summary << "## Parameters\n";
+            summary << "SVM C: " << svm_c << "\n";
+            summary << "SVM gamma: " << svm_gamma << "\n";
+            summary << "Random Forest trees: " << rf_trees << "\n";
+            summary << "KNN k: " << knn_k << "\n";
+            summary << "KNN metric: " << knn_metric << "\n";
+            summary << "Neural Network hidden1: " << nn_hidden1 << "\n";
+            summary << "Neural Network hidden2: " << nn_hidden2 << "\n";
+            summary << "Cross-validation folds: " << n_folds << "\n";
+            summary.close();
+        }
+    } else {
+        printColored("❌ Failed to save some models!", COLOR_RED);
+    }
     return 0;
 }

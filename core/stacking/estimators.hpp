@@ -20,10 +20,15 @@
 #include <shark/Data/Csv.h>
 #include <eigen3/Eigen/Dense>
 #include "stacking_classifier.hpp"
+#include <cereal/archives/binary.hpp>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/softmax_regression/softmax_regression.hpp>
 #include <mlpack/methods/random_forest/random_forest.hpp>
-
+#include <mlpack/methods/ann/ffn.hpp>
+#include <mlpack/methods/ann/layer/layer.hpp>
+#include <mlpack/methods/ann/loss_functions/negative_log_likelihood.hpp>
+#include <mlpack/methods/ann/init_rules/random_init.hpp>
+#include <mlpack/methods/linear_svm/linear_svm.hpp>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXi;
@@ -78,7 +83,7 @@ namespace harmony
 	{
 		using sample_type = dlib::matrix<double, 0, 1>;
 		using kernel_type = dlib::radial_basis_kernel<sample_type>;
-		using ovo_trainer_type = dlib::one_vs_one_trainer<dlib::any_trainer<sample_type>, int>;;
+		using ovo_trainer_type = dlib::one_vs_all_trainer<dlib::any_trainer<sample_type>, int>;;
 		using df_type = typename ovo_trainer_type::trained_function_type;
 		
 		// trainers
@@ -104,7 +109,22 @@ namespace harmony
 		 * @param X Test data (n_samples x n_features)
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
-		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
+
 
 	private:
 		df_type decision_function_;
@@ -136,7 +156,21 @@ namespace harmony
 		 * @param X Test data (n_samples x n_features)
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
-		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
 	
 	private:
 		mlpack::RandomForest<> model_;
@@ -171,7 +205,21 @@ namespace harmony
 		 * @param X Test data (n_samples x n_features)
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
-		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
 	
 	private:
 		mlpack::RandomForest<> model_;
@@ -210,7 +258,21 @@ namespace harmony
 		 * @param X Test data (n_samples x n_features)
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
-		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
 	};
 
 	/**
@@ -238,12 +300,125 @@ namespace harmony
 		 * @param X Test data (n_samples x n_features)
 		 * @param y_pred Output predicted labels (n_samples)
 		 */
-		void predict(const MatrixXd &X, VectorXi &y_pred) const override;
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
 	
 	private:
 		double lambda_;
 		std::size_t nClasses_;
 		mlpack::SoftmaxRegression<> model_;
+	};
+
+	/**
+	 * @brief Neural Network classifier implementation using mlpack
+	 * Implements a feed-forward neural network with two hidden layers
+	 */
+	struct NeuralNet : BaseEstimator
+	{
+		/**
+		 * @brief Constructs Neural Network classifier
+		 * @param hiddenUnits1 Number of units in the first hidden layer
+		 * @param hiddenUnits2 Number of units in the second hidden layer
+		 * @param nClasses Number of output classes
+		 */
+		NeuralNet(std::size_t hiddenUnits1 = 64, std::size_t hiddenUnits2 = 32, 
+				std::size_t nClasses = 2);
+
+		/**
+		 * @brief Trains the Neural Network model
+		 * @param X Training data (n_samples x n_features)
+		 * @param y Target labels (n_samples)
+		 */
+		void train(const MatrixXd &X, const VectorXi &y) override;
+
+		/**
+		 * @brief Predicts labels for test data
+		 * @param X Test data (n_samples x n_features)
+		 * @param y_pred Output predicted labels (n_samples)
+		 */
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
+
+	private:
+		mlpack::FFN<mlpack::NegativeLogLikelihood, mlpack::HeInitialization> model_;
+		std::size_t hiddenUnits1_;
+		std::size_t hiddenUnits2_;
+		std::size_t nClasses_;
+		std::size_t inputDim_;
+	};
+
+	/**
+	 * @brief Support Vector Machine classifier using MLpack
+	 * Implements multiclass classification with linear kernel
+	 */
+	struct SVM_ML : BaseEstimator
+	{
+		/**
+		 * @brief Constructs SVM with specified parameters
+		 * @param C Regularization parameter
+		 * @param gamma Kernel parameter for RBF
+		 */
+		SVM_ML(double C = 1.0, double gamma = 0.01);
+
+		/**
+		 * @brief Trains the SVM model
+		 * @param X Training data (n_samples x n_features)
+		 * @param y Target labels (n_samples)
+		 */
+		void train(const MatrixXd &X, const VectorXi &y) override;
+
+		/**
+		 * @brief Predicts labels for test data
+		 * @param X Test data (n_samples x n_features)
+		 * @param y_pred Output predicted labels (n_samples)
+		 */
+		void predict(const MatrixXd &X, VectorXi &y_pred) override;
+
+		/**
+		 * @brief Saves the model to a file
+		 * @param directory Path where to save the model
+		 * @return true if successful, false otherwise
+		 */
+		bool save(const std::string &directory) const override;
+
+		/**
+		 * @brief Loads the model from a file
+		 * @param directory Path from where to load the model
+		 * @return true if successful, false otherwise
+		 */
+		bool load(const std::string &directory) override;
+
+	private:
+		double C_;
+		double gamma_;
+		size_t nClasses_;
+		mlpack::LinearSVM<> model_;
 	};
 
 }
