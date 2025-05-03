@@ -164,4 +164,6 @@ bool StackingClassifier::loadModels(const std::string &directory) {
         std::cerr << "Failed to load meta model" << std::endl;
         return false;
     }
+
+    return true;
 }
