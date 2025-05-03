@@ -39,8 +39,6 @@ bool AudioPreprocessor::processFile(const std::string &inputPath, const std::str
     {
         int sampleRate = 0;
         std::vector<Real> audioBuffer = AudioUtil::readAudioFile(inputPath, duration, sampleRate);
-        result = audioBuffer;
-        return true;
 
         if (audioBuffer.empty())
         {
