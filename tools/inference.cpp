@@ -30,8 +30,11 @@ using LEVEL = harmony::Logger::Level;
 harmony::Logger &logger = harmony::Logger::getInstance();
 
 std::unique_ptr<StackingClassifier> loadModelFromFile(const std::string& modelDir, const std::string& configPrefix) {
+
+    std::string modelSubdir = configPrefix.empty() ? modelDir : modelDir + "/" + configPrefix;
+
     // Load configuration parameters from summary file
-    std::ifstream summaryFile(modelDir + "/summary.txt");
+    std::ifstream summaryFile(modelSubdir + "/summary.txt");
     if (!summaryFile.is_open()) {
         std::cerr << "Error: Failed to open summary file" << std::endl;
         return nullptr;
@@ -77,11 +80,11 @@ std::unique_ptr<StackingClassifier> loadModelFromFile(const std::string& modelDi
 
     // Create base models matching training configuration
     std::vector<std::unique_ptr<BaseEstimator>> base_models;
-    // base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
     
     // Uncomment these when needed and properly implemented
     logger.log("▸ Loading SVM model with C=" + std::to_string(svm_c) + " and gamma=" + std::to_string(svm_gamma), COLOR::RESET);
-    base_models.push_back(std::make_unique<harmony::SVM>(svm_c, svm_gamma));
+    base_models.push_back(std::make_unique<harmony::SVM_ML>(svm_c, svm_gamma));
+    base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, n_classes));
     // base_models.push_back(std::make_unique<harmony::NeuralNet>(nn_hidden1, nn_hidden2, n_classes));
     
@@ -93,7 +96,6 @@ std::unique_ptr<StackingClassifier> loadModelFromFile(const std::string& modelDi
     auto classifier = std::make_unique<StackingClassifier>(std::move(base_models), std::move(meta_model));
     
     // Load models
-    std::string modelSubdir = configPrefix.empty() ? modelDir : modelDir + "/" + configPrefix;
     if (!classifier->loadModels(modelSubdir)) {
         std::cerr << "Error: Failed to load " << configPrefix << " models from " << modelSubdir << std::endl;
         return nullptr;
@@ -104,9 +106,9 @@ std::unique_ptr<StackingClassifier> loadModelFromFile(const std::string& modelDi
 
 struct Config {
     std::string dataDir = "data/test";
-    std::string modelDir = "models/both";
+    std::string modelDir = "models";
     std::string groundTruthPath = "data/datasets/filtered_data_labeled.tsv";
-    std::string mode = "single";
+    std::string mode = "combined";
     std::string genderPrefix = "gender";
     std::string agePrefix = "age";
 };
@@ -192,7 +194,7 @@ private:
             if (ext == ".mp3" || ext == ".wav")
                 files.push_back(entry.path().filename().string());
         }
-        // std::sort(files.begin(), files.end(), numericalSort);
+        std::sort(files.begin(), files.end(), numericalSort);
         return files;
     }
 
