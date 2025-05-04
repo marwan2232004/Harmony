@@ -157,6 +157,13 @@ private:
         parser.addOption("gender-prefix", "Prefix for gender model files", config.genderPrefix);
         parser.addOption("age-prefix", "Prefix for age model files", config.agePrefix);
         parser.parse();
+        config.dataDir = parser.get<std::string>("data-dir");
+        config.modelDir = parser.get<std::string>("model-dir");
+        config.groundTruthPath = parser.get<std::string>("ground-truth");
+        config.mode = parser.get<std::string>("mode");
+        config.genderPrefix = parser.get<std::string>("gender-prefix");
+        config.agePrefix = parser.get<std::string>("age-prefix");
+
     }
 
     bool verifyDirectories() const {
@@ -262,10 +269,9 @@ private:
     }
 
     void writeOutputs(const std::vector<int>& preds, const std::vector<std::string>& files) {
-        std::ofstream resF("results.txt"), timeF("time.txt");
+        std::ofstream resF("results.txt");
         for (int cls : preds) resF << cls << "\n";
         auto duration = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - startTime);
-        timeF << duration.count();
 
         if (fs::exists(config.groundTruthPath)) {
             auto truth = parseGroundTruth(config.groundTruthPath);
