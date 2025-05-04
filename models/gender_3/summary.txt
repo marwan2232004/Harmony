@@ -1,0 +1,14 @@
+# Stacking Model Summary
+
+Target: gender
+Accuracy: 96.33%
+
+## Parameters
+SVM C: 1000
+SVM gamma: 0.00
+Random Forest trees: 700
+KNN k: 5
+KNN metric: euclidean
+Neural Network hidden1: 64
+Neural Network hidden2: 32
+Cross-validation folds: 5

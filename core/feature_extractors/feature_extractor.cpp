@@ -8,7 +8,7 @@ std::vector<float> getFeatureVector(std::string path, std::vector<Real> inputAud
     std::vector<float> featureVector;
     
     std::vector<float> MFCCfeatures = extractMFCCFeatures(
-        path, sampleRate, 400, 160, 26, 13, 0, 8000, 22, 2, "dbamp", factory, featureVector, inputAudio,true
+        path, sampleRate, 400, 160, 26, 26, 0, 8000, 22, 2, "dbamp", factory, featureVector, inputAudio,true
     );
 
     // std::vector<float> ChromaFeatures = extractChromaFeatures(
