@@ -109,8 +109,8 @@ struct Config {
     std::string modelDir = "models";
     std::string groundTruthPath = "data/datasets/filtered_data_labeled.tsv";
     std::string mode = "combined";
-    std::string genderPrefix = "gender";
-    std::string agePrefix = "age";
+    std::string genderPrefix = "gender_3";
+    std::string agePrefix = "age_3";
 };
 
 class Inference {
