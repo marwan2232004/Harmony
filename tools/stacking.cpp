@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
             summary << "Accuracy: " << std::fixed << std::setprecision(2) << accuracy << "%\n\n";
             summary << "## Parameters\n";
             summary << "SVM C: " << svm_c << "\n";
-            summary << "SVM gamma: " << svm_gamma << "\n";
+            summary << "SVM gamma: " << std::fixed << std::setprecision(6) << svm_gamma << "\n";
             summary << "Random Forest trees: " << rf_trees << "\n";
             summary << "KNN k: " << knn_k << "\n";
             summary << "KNN metric: " << knn_metric << "\n";
