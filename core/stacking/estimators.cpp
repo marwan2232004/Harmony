@@ -1,6 +1,6 @@
 #include "../../include/knn.h"
 #include "estimators.hpp"
-
+#include <omp.h>
 
 namespace harmony
 {
@@ -29,11 +29,11 @@ namespace harmony
         decision_function_ = ovo_trainer.train(samples, labels);
     }
 
-    void SVM::predict(const MatrixXd &X, VectorXi &y_pred)
-    {
+    void SVM::predict(const MatrixXd &X, VectorXi &y_pred) {
         y_pred.resize(X.rows());
-        for (int i = 0; i < X.rows(); ++i)
-        {
+        
+        #pragma omp parallel for
+        for (int i = 0; i < X.rows(); ++i) {
             auto sample = to_dlib_vec(X.row(i));
             int pred = decision_function_(sample);
             y_pred(i) = pred;
@@ -105,23 +105,24 @@ namespace harmony
         model_ = std::move(rf);
     }
 
-    void ExtraTrees::predict(const MatrixXd &X, VectorXi &y_pred)
-    {
+    void ExtraTrees::predict(const MatrixXd &X, VectorXi &y_pred) {
         arma::mat testData(X.cols(), X.rows());
-        for (size_t i = 0; i < X.rows(); ++i)
-        {
-            for (size_t j = 0; j < X.cols(); ++j)
-            {
+        
+        // Parallelize data conversion
+        #pragma omp parallel for collapse(2)
+        for (size_t i = 0; i < X.rows(); ++i) {
+            for (size_t j = 0; j < X.cols(); ++j) {
                 testData(j, i) = X(i, j);
             }
         }
-
+    
+        // The mlpack Classify function may already be parallelized internally
         arma::Row<size_t> predictions;
         model_.Classify(testData, predictions);
-
+    
         y_pred.resize(X.rows());
-        for (size_t i = 0; i < X.rows(); ++i)
-        {
+        #pragma omp parallel for
+        for (size_t i = 0; i < X.rows(); ++i) {
             y_pred(i) = static_cast<int>(predictions(i));
         }
     }
@@ -273,18 +274,16 @@ namespace harmony
         }
     }
 
-    void KNN::predict(const MatrixXd &X, VectorXi &y_pred)
-    {
+    void KNN::predict(const MatrixXd &X, VectorXi &y_pred) {
         y_pred.resize(X.rows());
-
-        for (int i = 0; i < X.rows(); ++i)
-        {
+    
+        #pragma omp parallel for
+        for (int i = 0; i < X.rows(); ++i) {
             std::vector<float> query(X.cols());
-            for (int j = 0; j < X.cols(); ++j)
-            {
+            for (int j = 0; j < X.cols(); ++j) {
                 query[j] = static_cast<float>(X(i, j));
             }
-
+    
             y_pred(i) = predict_knn(train_features_, train_labels_, query, k_, metric_);
         }
     }
@@ -575,24 +574,23 @@ namespace harmony
         model_ = mlpack::LinearSVM<>(trainData, labels, nClasses_, C_);
     }
 
-    void SVM_ML::predict(const MatrixXd &X, VectorXi &y_pred)
-    {
-        // Convert data to mlpack format
-        arma::mat testData(X.cols(), X.rows());
-        for (size_t i = 0; i < X.rows(); ++i) {
-            for (size_t j = 0; j < X.cols(); ++j) {
-                testData(j, i) = X(i, j);
-            }
-        }
-
-        // Predict
-        arma::Row<size_t> predictions;
-        model_.Classify(testData, predictions);
-
-        // Convert predictions to output format
+    void SVM_ML::predict(const MatrixXd &X, VectorXi &y_pred) {
         y_pred.resize(X.rows());
+        
+        #pragma omp parallel for
         for (size_t i = 0; i < X.rows(); ++i) {
-            y_pred(i) = static_cast<int>(predictions(i));
+            // Process one sample at a time for consistent predictions
+            arma::mat singleSample(X.cols(), 1);
+            for (size_t j = 0; j < X.cols(); ++j) {
+                singleSample(j, 0) = X(i, j);
+            }
+            
+            // Predict single sample
+            arma::Row<size_t> prediction;
+            model_.Classify(singleSample, prediction);
+            
+            // Store result
+            y_pred(i) = static_cast<int>(prediction(0));
         }
     }
 

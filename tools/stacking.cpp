@@ -55,6 +55,7 @@ Dataset loadTSV(const std::string& path, const std::string& target) {
     while (std::getline(file, line)) rows++;
     file.clear();
     file.seekg(0);
+    std::getline(file, line);
     std::istringstream iss(line);
     std::string cell;
     while (std::getline(iss, cell, '\t')) cols++;
@@ -69,7 +70,6 @@ Dataset loadTSV(const std::string& path, const std::string& target) {
     
     // Second pass to load data
     file.seekg(0);
-    std::getline(file, line); // Skip header
     int row_idx = 0;
     harmony::Logger::ProgressBar progressBar(rows, "📂 Loading " + fs::path(path).filename().string());
     
@@ -85,7 +85,7 @@ Dataset loadTSV(const std::string& path, const std::string& target) {
         std::string genderLabel;
         std::getline(iss, genderLabel, '\t');
         if (target == "gender") {
-            dataset.y(row_idx) = (genderLabel == "female") ? 0 : 1;
+            dataset.y(row_idx) = (genderLabel == "male") ? 0 : 1;
         } else if (target == "age") {
             dataset.y(row_idx) = (ageLabel == "twenties") ? 0 : 1;
         } else {
@@ -141,6 +141,7 @@ void ensureDirectoryExists(const std::string& path) {
 
 
 int main(int argc, char* argv[]) {
+    omp_set_num_threads(std::min(12, omp_get_num_procs()));
     // Configuration
     std::string train_path = "data/features/train.tsv";
     std::string test_path = "data/features/test.tsv";
@@ -227,12 +228,12 @@ int main(int argc, char* argv[]) {
     // Initialize models
     logger.log("⚡ Initializing models...", COLOR::GREEN);
     std::vector<std::unique_ptr<BaseEstimator>> base_models;
-    // base_models.push_back(std::make_unique<harmony::SVM>(svm_c, svm_gamma));
-    base_models.push_back(std::make_unique<harmony::ExtraTrees>(400, 5, nClasses));
+    base_models.push_back(std::make_unique<harmony::SVM_ML>(svm_c, svm_gamma));
+    // base_models.push_back(std::make_unique<harmony::ExtraTrees>(400, 5, nClasses));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, nClasses));
     base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
     // base_models.push_back(std::make_unique<harmony::NeuralNet>(nn_hidden1, nn_hidden2, nClasses));
-    auto meta_model = std::make_unique<harmony::LR>(0.01, nClasses);
+    auto meta_model = std::make_unique<harmony::LR>(0.001, nClasses);
 
     // Create stacker
     StackingClassifier stacker(

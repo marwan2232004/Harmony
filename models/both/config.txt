@@ -1,3 +1,0 @@
-num_base_models=1
-num_folds=5
-fitted=true
