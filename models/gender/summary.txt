@@ -5,7 +5,7 @@ Accuracy: 95.28%
 
 ## Parameters
 SVM C: 1000
-SVM gamma: 0.00
+SVM gamma: 0.0001
 Random Forest trees: 700
 KNN k: 5
 KNN metric: euclidean

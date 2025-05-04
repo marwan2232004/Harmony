@@ -84,6 +84,7 @@ std::unique_ptr<StackingClassifier> loadModelFromFile(const std::string& modelDi
     // Uncomment these when needed and properly implemented
     logger.log("▸ Loading SVM model with C=" + std::to_string(svm_c) + " and gamma=" + std::to_string(svm_gamma), COLOR::RESET);
     base_models.push_back(std::make_unique<harmony::SVM_ML>(svm_c, svm_gamma));
+    logger.log("▸ Loading KNN model with k=" + std::to_string(knn_k) + " and metric=" + knn_metric, COLOR::RESET);
     base_models.push_back(std::make_unique<harmony::KNN>(knn_k, knn_metric));
     // base_models.push_back(std::make_unique<harmony::RandomForest>(rf_trees, 5, n_classes));
     // base_models.push_back(std::make_unique<harmony::NeuralNet>(nn_hidden1, nn_hidden2, n_classes));
