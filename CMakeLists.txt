@@ -230,70 +230,70 @@ target_link_libraries(stacking
 # ────────────────────────────────────────────────────────────────────────────────
 # Add inference as a separate executable
 # ────────────────────────────────────────────────────────────────────────────────
-# add_executable(inference
-#     tools/inference.cpp 
-#     ${EXTRACTORS}
-#     ${STACKING}
-#     ${PREPROCESSOR}
-#     ${MODELS}
-#     ${TOOLS}
-#     ${UTILS}
-#     ${HEADERS_INCLUDE}
-#     ${HEADERS_STACKING}
-#     ${HEADERS_PREPROCESSOR} 
-#     ${HEADERS_TOOLS}
-#     ${HEADERS_UTILS}
-# )
+add_executable(inference
+    tools/inference.cpp 
+    ${EXTRACTORS}
+    ${STACKING}
+    ${PREPROCESSOR}
+    ${MODELS}
+    ${TOOLS}
+    ${UTILS}
+    ${HEADERS_INCLUDE}
+    ${HEADERS_STACKING}
+    ${HEADERS_PREPROCESSOR} 
+    ${HEADERS_TOOLS}
+    ${HEADERS_UTILS}
+)
 
-# target_compile_options(inference PRIVATE
-#     ${OpenMP_CXX_FLAGS}
-# )
+target_compile_options(inference PRIVATE
+    ${OpenMP_CXX_FLAGS}
+)
 
-# # Include directories for stacking
-# target_include_directories(inference PRIVATE
-#     ${CMAKE_CURRENT_SOURCE_DIR}/include
-#     ${ESSENTIA_INCLUDE}
-#     ${dlib_INCLUDE_DIRS}
-#     ${OpenMP_CXX_INCLUDE_DIRS}
-#     ${MLPACK_INCLUDE_DIR}
-#     ${Armadillo_INCLUDE_DIRS}
-# )
+# Include directories for stacking
+target_include_directories(inference PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${ESSENTIA_INCLUDE}
+    ${dlib_INCLUDE_DIRS}
+    ${OpenMP_CXX_INCLUDE_DIRS}
+    ${MLPACK_INCLUDE_DIR}
+    ${Armadillo_INCLUDE_DIRS}
+)
 
-# # Link libraries for stacking
-# target_link_libraries(inference
-#     OpenMP::OpenMP_CXX
-#     ${ESSENTIA_LIB}
-#     ${dlib_LIBRARIES}
-#     ${Boost_LIBRARIES} 
-#     stdc++fs
-#     # The ordering of these libraries is critical for resolving dependencies
-#     ${Armadillo_LIBRARIES}
-#     ${LAPACK_LIBRARIES}
-#     ${BLAS_LIBRARIES}
-#     ${OpenMP_CXX_LIBRARIES}
-#     # Explicit linking as a fallback
-#     -larmadillo
-#     -llapack 
-#     -lopenblas
-#     -lblas
-# )
+# Link libraries for stacking
+target_link_libraries(inference
+    OpenMP::OpenMP_CXX
+    ${ESSENTIA_LIB}
+    ${dlib_LIBRARIES}
+    ${Boost_LIBRARIES} 
+    stdc++fs
+    # The ordering of these libraries is critical for resolving dependencies
+    ${Armadillo_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${BLAS_LIBRARIES}
+    ${OpenMP_CXX_LIBRARIES}
+    # Explicit linking as a fallback
+    -larmadillo
+    -llapack 
+    -lopenblas
+    -lblas
+)
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Add infer - a wrapper for inference with execution time measurement
 # ────────────────────────────────────────────────────────────────────────────────
-# add_executable(infer
-#     infer.cpp
-# )
+add_executable(infer
+    infer.cpp
+)
 
-# # Include directories for infer
-# target_include_directories(infer PRIVATE
-#     ${CMAKE_CURRENT_SOURCE_DIR}/include
-# )
+# Include directories for infer
+target_include_directories(infer PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
-# # Link libraries for infer
-# target_link_libraries(infer
-#     stdc++fs  # For filesystem support
-# )
+# Link libraries for infer
+target_link_libraries(infer
+    stdc++fs  # For filesystem support
+)
 
-# # Ensure infer depends on inference so it's built first
-# add_dependencies(infer inference)
+# Ensure infer depends on inference so it's built first
+add_dependencies(infer inference)
